@@ -46,6 +46,7 @@ const CustomAlert: React.FC<AlertProps> = ({ type, title, message }) => {
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -83,6 +84,7 @@ export default function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          username: formData.username,
           email: formData.email,
           password: formData.password,
         }),
@@ -159,6 +161,18 @@ export default function RegisterPage() {
           <CardContent>
             <CustomAlert {...alert} />
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  name="username"
+                  type="text"
+                  required
+                  maxLength={50}
+                  value={formData.username}
+                  onChange={handleChange}
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
