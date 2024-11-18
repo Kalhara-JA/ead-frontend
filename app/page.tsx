@@ -20,6 +20,7 @@ import CTASignUpSection from "@/components/cta-section";
 import SiteFooter from "@/components/site-footer";
 import ProductPage from "@/components/product-section";
 import Header from "@/components/site-header";
+import { fetchProducts } from "./api/v1/product/route";
 
 const products = [
   {
@@ -110,6 +111,28 @@ export default function ECommerceApp() {
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getProducts = async () => {
+      try {
+        const data = await fetchProducts();
+        console.log(data);
+        setProducts(data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getProducts();
+  }, []);
+
+  console.log(products);
+  // if (loading) return <p>Loading...</p>;
+
   useEffect(() => {
     const savedCart = localStorage.getItem("cart");
     if (savedCart) {
@@ -176,7 +199,7 @@ export default function ECommerceApp() {
   );
 
   const renderLandingPage = () => (
-    // Landing Page  Section 
+    // Landing Page  Section
     <main className="flex-1">
       <section className="w-full py-12 md:py-24 lg:py-28 xl:py-28 bg-white dark:bg-black overflow-hidden">
         <div className="container px-4 md:px-6 mx-auto">
@@ -200,7 +223,7 @@ export default function ECommerceApp() {
                 <Button
                   variant="outline"
                   className="inline-flex items-center justify-center border-black text-black dark:border-white dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900"
-                  onClick={() => window.open('https://easyui.pro', '_blank')}
+                  onClick={() => window.open("https://easyui.pro", "_blank")}
                 >
                   Learn More
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -219,7 +242,7 @@ export default function ECommerceApp() {
               <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-black dark:bg-white rounded-full" />
 
               <div
-                className="absolute inset-0 z-0" 
+                className="absolute inset-0 z-0"
                 style={{
                   backgroundImage:
                     "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1), rgba(0,0,0,0.05) 70%, transparent 70%)",
@@ -285,7 +308,7 @@ export default function ECommerceApp() {
                         <h3 className="font-semibold">{item.name}</h3>
                         <p className="text-sm text-muted-foreground">
                           {/* @ts-ignore */}
-                          ${item.price.toFixed(2)}
+                          {/* ${item.price.toFixed(2)} */}
                         </p>
                       </div>
                     </div>
@@ -341,7 +364,7 @@ export default function ECommerceApp() {
 
   return (
     <div className="flex flex-col min-h-screen">
-       <Header
+      <Header
         setCurrentPage={setCurrentPage}
         cart={cart}
         setCart={setCart}
