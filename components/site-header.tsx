@@ -11,6 +11,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+import AuthButton from './AuthButton';
+
   //@ts-ignore
 const Header = ({ setCurrentPage, cart, setCart, isCartOpen, setIsCartOpen }) => {
   //@ts-ignore
@@ -59,7 +61,6 @@ const Header = ({ setCurrentPage, cart, setCart, isCartOpen, setIsCartOpen }) =>
   
 
   return (
-    
     <div className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
         <div className="mr-4 hidden md:flex">
@@ -131,16 +132,10 @@ const Header = ({ setCurrentPage, cart, setCart, isCartOpen, setIsCartOpen }) =>
                 >
                   Categories
                 </a>
-                <a
-                  className="text-sm font-medium text-primary"
-                  href="#"
-                >
+                <a className="text-sm font-medium text-primary" href="#">
                   Deals
                 </a>
-                <a
-                  className="text-sm font-medium text-primary"
-                  href="/#about"
-                >
+                <a className="text-sm font-medium text-primary" href="/#about">
                   About
                 </a>
               </div>
@@ -179,6 +174,7 @@ const Header = ({ setCurrentPage, cart, setCart, isCartOpen, setIsCartOpen }) =>
                   </span>
                 )}
               </Button>
+              <AuthButton /> 
             </div>
           </div>
         </div>
