@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
-import { Input } from "./ui/input";
 import {
   Select,
   SelectContent,
@@ -10,6 +8,18 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Slider } from "./ui/slider";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface Product {
   id: number;
@@ -52,6 +62,36 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-white">
         <h1 className="text-xl font-bold">Our Products</h1>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline">Edit Profile</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit profile</DialogTitle>
+              <DialogDescription>
+                Make changes to your profile here. Click save when you're done.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Name
+                </Label>
+                <Input id="name" value="Pedro Duarte" className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="username" className="text-right">
+                  Username
+                </Label>
+                <Input id="username" value="@peduarte" className="col-span-3" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit">Save changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
       <header className="flex items-center justify-between p-4 border-b bg-white">
         <div className="flex items-center space-x-4">
@@ -248,27 +288,66 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {filteredProducts.map((product) => (
                 <div key={product.id}>
-                  <Card>
-                    <CardContent className="p-4">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-48 object-cover mb-4 rounded-md"
-                      />
-                      <h2 className="text-xl font-semibold mb-2">
-                        {product.name}
-                      </h2>
-                      <p className="text-muted-foreground mb-4">
-                        ${product.price.toFixed(2)}
-                      </p>
-                      <Button
-                        onClick={() => addToCart(product)}
-                        className="w-full"
-                      >
-                        Add to Cart
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <Dialog>
+                  
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Edit profile</DialogTitle>
+                        <DialogDescription>
+                          Make changes to your profile here. Click save when
+                          you're done.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="name" className="text-right">
+                            Name
+                          </Label>
+                          <Input
+                            id="name"
+                            value="Pedro Duarte"
+                            className="col-span-3"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="username" className="text-right">
+                            Username
+                          </Label>
+                          <Input
+                            id="username"
+                            value="@peduarte"
+                            className="col-span-3"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button type="submit">Save changes</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                    <DialogTrigger asChild>
+                    <Card>
+                      <CardContent className="p-4">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-48 object-cover mb-4 rounded-md"
+                        />
+                        <h2 className="text-xl font-semibold mb-2">
+                          {product.name}
+                        </h2>
+                        <p className="text-muted-foreground mb-4">
+                          ${product.price.toFixed(2)}
+                        </p>
+                        <Button
+                          onClick={() => addToCart(product)}
+                          className="w-full"
+                        >
+                          Add to Cart
+                        </Button>
+                      </CardContent>
+                    </Card>
+                    </DialogTrigger>
+                  </Dialog>
                 </div>
               ))}
             </div>
