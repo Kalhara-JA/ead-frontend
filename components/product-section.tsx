@@ -289,7 +289,6 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
               {filteredProducts.map((product) => (
                 <div key={product.id}>
                   <Dialog>
-                  
                     <DialogContent className="sm:max-w-[425px]">
                       <DialogHeader>
                         <DialogTitle>Edit profile</DialogTitle>
@@ -325,27 +324,27 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
                       </DialogFooter>
                     </DialogContent>
                     <DialogTrigger asChild>
-                    <Card>
-                      <CardContent className="p-4">
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-full h-48 object-cover mb-4 rounded-md"
-                        />
-                        <h2 className="text-xl font-semibold mb-2">
-                          {product.name}
-                        </h2>
-                        <p className="text-muted-foreground mb-4">
-                          ${product.price.toFixed(2)}
-                        </p>
-                        <Button
-                          onClick={() => addToCart(product)}
-                          className="w-full"
-                        >
-                          Add to Cart
-                        </Button>
-                      </CardContent>
-                    </Card>
+                      <Card>
+                        <CardContent className="p-4">
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-full h-48 object-cover mb-4 rounded-md"
+                          />
+                          <h2 className="text-xl font-semibold mb-2">
+                            {product.name}
+                          </h2>
+                          <p className="text-muted-foreground mb-4">
+                            ${product.price.toFixed(2)}
+                          </p>
+                          <Button
+                            onClick={() => addToCart(product)}
+                            className="w-full"
+                          >
+                            Add to Cart
+                          </Button>
+                        </CardContent>
+                      </Card>
                     </DialogTrigger>
                   </Dialog>
                 </div>
