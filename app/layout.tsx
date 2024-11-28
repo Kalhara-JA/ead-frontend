@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import Header from "@/components/site-header";
 import ReactQueryProvider from "@/utils/ReactQueryProvider";
 import { Providers } from "@/components/Providers";
+import { Toaster } from "react-hot-toast";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -32,6 +33,7 @@ export default function RootLayout({
       >
         {" "}
         <Providers>
+          <Toaster position="top-center" />
           <ReactQueryProvider>{children}</ReactQueryProvider>
         </Providers>
       </body>
