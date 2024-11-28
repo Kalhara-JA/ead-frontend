@@ -16,14 +16,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Toaster, toast } from "react-hot-toast";
 import { registerUser } from "@/services/userService";
-
-type AlertType = "error" | "success" | null;
-
-interface AlertProps {
-  type: AlertType;
-  title: string;
-  message: string;
-}
+import { CloudinaryUploadWidget } from "@/components/CloudinaryUploadWidget";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -43,9 +36,21 @@ export default function RegisterPage() {
 
   const [formData, setFormData] = useState(initialFormState);
   const [isLoading, setIsLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleImageUpload = (error: any, result: any) => {
+    if (!error && result && result.event === "success") {
+      const uploadedImageUrl = result.info.secure_url;
+      setFormData({ ...formData, image: uploadedImageUrl });
+      setImagePreview(uploadedImageUrl);
+      toast.success("Image uploaded successfully");
+    } else if (error) {
+      toast.error("Image upload failed");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -72,20 +77,18 @@ export default function RegisterPage() {
         country: formData.country,
       };
 
-      // Call the service to register the user
       await registerUser(userData);
 
       toast.success(
         "Registration successful. Redirecting to the sign-in page..."
       );
 
-      // Clear the form
       setFormData(initialFormState);
+      setImagePreview(null);
 
-      // Redirect to sign-in page
       setTimeout(() => {
         router.push("/auth/signin");
-      }, 2000); // Delay for user to read the success message
+      }, 2000);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Registration failed"
@@ -134,7 +137,6 @@ export default function RegisterPage() {
                     label: "Confirm Password",
                     type: "password",
                   },
-                  { id: "image", label: "Profile Image URL", type: "text" },
                   { id: "street", label: "Street Address", type: "text" },
                   { id: "city", label: "City", type: "text" },
                   { id: "state", label: "State/Province", type: "text" },
@@ -156,6 +158,25 @@ export default function RegisterPage() {
                     />
                   </div>
                 ))}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="image" className="text-sm font-medium">
+                  Profile Image
+                </Label>
+                <div className="flex items-center space-x-4">
+                  {imagePreview && (
+                    <Image
+                      src={imagePreview}
+                      alt="Profile preview"
+                      width={100}
+                      height={100}
+                      className="rounded-full object-cover"
+                    />
+                  )}
+                  <CloudinaryUploadWidget onUpload={handleImageUpload}>
+                    Upload Image
+                  </CloudinaryUploadWidget>
+                </div>
               </div>
               <Button
                 type="submit"

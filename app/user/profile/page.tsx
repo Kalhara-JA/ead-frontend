@@ -17,6 +17,7 @@ import axios from "@/lib/axiosInstance";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Toaster, toast } from "react-hot-toast";
+import { CloudinaryUploadWidget } from "@/components/CloudinaryUploadWidget"; // Import the upload widget
 
 export default function ProfilePage() {
   const [formData, setFormData] = useState({
@@ -69,6 +70,16 @@ export default function ProfilePage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleImageUpload = (error: any, result: any) => {
+    if (!error && result && result.event === "success") {
+      const uploadedImageUrl = result.info.secure_url;
+      setFormData({ ...formData, image: uploadedImageUrl });
+      toast.success("Image uploaded successfully!");
+    } else if (error) {
+      toast.error("Image upload failed. Please try again.");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -131,7 +142,6 @@ export default function ProfilePage() {
                 {[
                   { id: "firstName", label: "First Name", type: "text" },
                   { id: "lastName", label: "Last Name", type: "text" },
-                  { id: "image", label: "Profile Image URL", type: "text" },
                   { id: "street", label: "Street Address", type: "text" },
                   { id: "city", label: "City", type: "text" },
                   { id: "state", label: "State/Province", type: "text" },
@@ -152,6 +162,12 @@ export default function ProfilePage() {
                     />
                   </div>
                 ))}
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Profile Image</Label>
+                <CloudinaryUploadWidget onUpload={handleImageUpload}>
+                  Upload Image
+                </CloudinaryUploadWidget>
               </div>
               <Button
                 type="submit"
