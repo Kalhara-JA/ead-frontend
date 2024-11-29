@@ -304,7 +304,6 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
                         <DialogDescription>
                           {product.category} - {product.brand}
                           <br />
-                          
                           {product.description}
                         </DialogDescription>
                       </DialogHeader>
@@ -314,12 +313,10 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
                           alt={product.name}
                           className="w-full h-48 object-cover mb-4 rounded-md"
                         />
-                        <div className="grid grid-cols-4 items-center gap-4">
-                    
-                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4"></div>
 
                         <div className="grid grid-cols-4 items-center gap-4">
-                        $ {product.price}
+                          $ {product.price}
                         </div>
                       </div>
                       <DialogFooter>
@@ -346,7 +343,10 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
                             ${product.price.toFixed(2)}
                           </p>
                           <Button
-                            onClick={() => addToCart(product)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addToCart(product);
+                            }}
                             className="w-full"
                           >
                             Add to Cart
