@@ -24,10 +24,12 @@ import { Label } from "@/components/ui/label";
 interface Product {
   id: number;
   name: string;
+  skuCode: string;
   price: number;
   image: string;
   category: string;
   brand: string;
+  description: string;
 }
 
 interface ProductPageProps {
@@ -56,16 +58,23 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
       product.price >= priceRange[0] &&
       product.price <= priceRange[1]
   );
+  console.log(filteredProducts);
 
   return (
     <main>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-white">
+      <div className="flex items-center justify-between p-2 bg-white">
         <h1 className="text-xl font-bold">Our Products</h1>
         <Dialog>
-          <DialogTrigger asChild>
+          <Input
+            placeholder="Search Products..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm bg-transparent border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-blue-300"
+          />
+          {/* <DialogTrigger asChild>
             <Button variant="outline">Edit Profile</Button>
-          </DialogTrigger>
+          </DialogTrigger> */}
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Edit profile</DialogTitle>
@@ -94,8 +103,8 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
         </Dialog>
       </div>
       <header className="flex items-center justify-between p-4 border-b bg-white">
-        <div className="flex items-center space-x-4">
-          {/* Burger Menu */}
+        {/* <div className="flex items-center space-x-4">
+      
           <Button
             variant="outline"
             onClick={() => setIsFilterOpen((prev) => !prev)}
@@ -103,14 +112,14 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
           >
             ☰
           </Button>
-        </div>
+        </div> */}
         {/* Transparent Search Bar */}
-        <Input
+        {/* <Input
           placeholder="Search Products..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm bg-transparent border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-blue-300"
-        />
+        /> */}
       </header>
 
       {/* Filters Sidebar for Mobile */}
@@ -291,36 +300,32 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
                   <Dialog>
                     <DialogContent className="sm:max-w-[425px]">
                       <DialogHeader>
-                        <DialogTitle>Edit profile</DialogTitle>
+                        <DialogTitle>{product.name}</DialogTitle>
                         <DialogDescription>
-                          Make changes to your profile here. Click save when
-                          you're done.
+                          {product.category} - {product.brand}
+                          <br />
+                          {product.description}
                         </DialogDescription>
                       </DialogHeader>
                       <div className="grid gap-4 py-4">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-48 object-cover mb-4 rounded-md"
+                        />
+                        <div className="grid grid-cols-4 items-center gap-4"></div>
+
                         <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="name" className="text-right">
-                            Name
-                          </Label>
-                          <Input
-                            id="name"
-                            value="Pedro Duarte"
-                            className="col-span-3"
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="username" className="text-right">
-                            Username
-                          </Label>
-                          <Input
-                            id="username"
-                            value="@peduarte"
-                            className="col-span-3"
-                          />
+                          $ {product.price}
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button type="submit">Save changes</Button>
+                        <Button
+                          onClick={() => addToCart(product)}
+                          className="w-full"
+                        >
+                          Add to Cart
+                        </Button>
                       </DialogFooter>
                     </DialogContent>
                     <DialogTrigger asChild>
@@ -338,7 +343,10 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
                             ${product.price.toFixed(2)}
                           </p>
                           <Button
-                            onClick={() => addToCart(product)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addToCart(product);
+                            }}
                             className="w-full"
                           >
                             Add to Cart
