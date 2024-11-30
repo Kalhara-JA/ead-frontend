@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle } from "lucide-react";
+import { registerUser } from "@/services/userService";
 
 type AlertType = "error" | "success" | null;
 
@@ -45,20 +46,27 @@ const CustomAlert: React.FC<AlertProps> = ({ type, title, message }) => {
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    username: "",
+  const initialFormState = {
     email: "",
     password: "",
     confirmPassword: "",
-  });
+    firstName: "",
+    lastName: "",
+    image: "",
+    street: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "",
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
   const [isLoading, setIsLoading] = useState(false);
   const [alert, setAlert] = useState<AlertProps>({
     type: null,
     title: "",
     message: "",
   });
-  const [isWaitingForVerification, setIsWaitingForVerification] =
-    useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -80,38 +88,36 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-        }),
+      const userData = {
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        image: formData.image,
+        street: formData.street,
+        locality: formData.city,
+        region: formData.state,
+        postal_code: formData.zip,
+        country: formData.country,
+      };
+
+      // Call the service to register the user
+      await registerUser(userData);
+
+      setAlert({
+        type: "success",
+        title: "Success",
+        message:
+          "Registration successful. Redirecting to the sign-in page...",
       });
 
-      const data = await response.json();
+      // Clear the form
+      setFormData(initialFormState);
 
-      if (response.ok) {
-        setAlert({
-          type: "success",
-          title: "Success",
-          message:
-            "Registration successful. Please check your email to verify your account.",
-        });
-        setIsWaitingForVerification(true);
-      } else {
-        if (data.error === "User-already-exists") {
-          setAlert({
-            type: "error",
-            title: "Error",
-            message:
-              "A user with this email already exists. Please sign in or use a different email.",
-          });
-        } else {
-          throw new Error(data.message || "Registration failed");
-        }
-      }
+      // Redirect to sign-in page
+      setTimeout(() => {
+        router.push("/auth/signin");
+      }, 2000); // Delay for user to read the success message
     } catch (error) {
       setAlert({
         type: "error",
@@ -122,32 +128,6 @@ export default function RegisterPage() {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-
-    if (isWaitingForVerification) {
-      intervalId = setInterval(async () => {
-        try {
-          const response = await fetch("/api/check-verification", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: formData.email }),
-          });
-          const data = await response.json();
-
-          if (data.isVerified) {
-            clearInterval(intervalId);
-            router.push("/auth/signin");
-          }
-        } catch (error) {
-          console.error("Verification check failed:", error);
-        }
-      }, 5000);
-    }
-
-    return () => clearInterval(intervalId);
-  }, [isWaitingForVerification, formData.email, router]);
 
   return (
     <div>
@@ -161,54 +141,31 @@ export default function RegisterPage() {
           <CardContent>
             <CustomAlert {...alert} />
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  name="username"
-                  type="text"
-                  required
-                  maxLength={50}
-                  value={formData.username}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  maxLength={100}
-                  value={formData.email}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  minLength={8}
-                  value={formData.password}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  minLength={8}
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                />
-              </div>
+              {[
+                { id: "email", label: "Email", type: "email" },
+                { id: "password", label: "Password", type: "password" },
+                { id: "confirmPassword", label: "Confirm Password", type: "password" },
+                { id: "firstName", label: "First Name", type: "text" },
+                { id: "lastName", label: "Last Name", type: "text" },
+                { id: "image", label: "Image URL", type: "text" },
+                { id: "street", label: "Street", type: "text" },
+                { id: "city", label: "City or Locality", type: "text" },
+                { id: "state", label: "State, Province, or Region", type: "text" },
+                { id: "zip", label: "Zip or Postal Code", type: "text" },
+                { id: "country", label: "Country", type: "text" },
+              ].map(({ id, label, type }) => (
+                <div key={id} className="space-y-2">
+                  <Label htmlFor={id}>{label}</Label>
+                  <Input
+                    id={id}
+                    name={id}
+                    type={type}
+                    required
+                    value={formData[id as keyof typeof formData]}
+                    onChange={handleChange}
+                  />
+                </div>
+              ))}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Registering..." : "Register"}
               </Button>

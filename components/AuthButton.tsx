@@ -13,7 +13,6 @@ import Link from "next/link";
 
 export default function AuthButton() {
   const { data: session } = useSession();
-  console.log("session", session);
 
   if (session) {
     return (
@@ -42,7 +41,7 @@ export default function AuthButton() {
             </div>
           </DropdownMenuItem>
           <DropdownMenuItem asChild className="hover:bg-[#370617]">
-            <Link href={`${process.env.NEXT_PUBLIC_KEYCLOAL_URL}/account`}>Profile Settings</Link>
+            <Link href="/user/profile">Profile Settings</Link>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => signOut()}

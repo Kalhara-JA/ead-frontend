@@ -20,7 +20,7 @@ import CTASignUpSection from "@/components/cta-section";
 import SiteFooter from "@/components/site-footer";
 import ProductPage from "@/components/product-section";
 import Header from "@/components/site-header";
-import { fetchProducts } from "./api/v1/product/route";
+import { getAllProducts } from "@/services/productService";
 
 const products = [
   {
@@ -117,7 +117,7 @@ export default function ECommerceApp() {
   useEffect(() => {
     const getProducts = async () => {
       try {
-        const data = await fetchProducts();
+        const data = await getAllProducts();
         console.log(data);
         setProducts(data);
       } catch (error) {
