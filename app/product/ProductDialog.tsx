@@ -49,9 +49,9 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Card>
-          <CardContent className="p-4">
+      <Card>
+        <CardContent className="p-4">
+          <DialogTrigger asChild>
             <img
               src={product.image}
               alt={product.name}
@@ -69,18 +69,21 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
               {product.category} - {product.brand}
             </p>
             <p className="text-base font-bold mb-4">${product.price}</p>
-            <DialogFooter>
-              <Button
-                onClick={handleAddToCart}
-                className="w-full"
-                disabled={quantity <= 0}
-              >
-                {quantity <= 0 ? "Out of Stock" : "Add to Cart"}
-              </Button>
-            </DialogFooter>
-          </CardContent>
-        </Card>
-      </DialogTrigger>
+          </DialogTrigger>
+          {/* Updated Button */}
+          <Button
+            onClick={(e) => {
+              // Prevent the dialog from opening
+              handleAddToCart(); // Call add-to-cart logic
+            }}
+            className="w-full"
+            disabled={quantity <= 0}
+          >
+            {quantity <= 0 ? "Out of Stock" : "Add to Cart"}
+          </Button>
+        </CardContent>
+      </Card>
+
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{product.name}</DialogTitle>
