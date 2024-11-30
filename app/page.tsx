@@ -21,6 +21,7 @@ import SiteFooter from "@/components/site-footer";
 import ProductPage from "@/components/product-section";
 import Header from "@/components/site-header";
 import { getAllProducts } from "@/services/productService";
+import { Toaster } from "react-hot-toast";
 
 const products = [
   {
