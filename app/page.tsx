@@ -24,7 +24,7 @@ import { getAllProducts } from "@/services/productService";
 import { useSession } from "next-auth/react";
 import { PlaceOrderResponse } from "@/types/orderTypes";
 import { payOrder, placeOrder } from "@/services/orderService";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 import { postOrders } from "@/services/orderServices"; 
 
@@ -79,7 +79,7 @@ const categories = [
 const deals = [
   {
     id: 7,
-    name: "AI Assistant Pro",
+    name: "pixel_8",
     price: 79.99,
     originalPrice: 129.99,
     image: "https://via.placeholder.com/1000",
@@ -279,58 +279,59 @@ export default function ECommerceApp() {
     </main>
   );
   const { data: session } = useSession();
-  const renderCart = () => {
 
+  const renderCart = () => {
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-    const [isPayModalOpen, setIsPayModalOpen] = useState(false); // New state for Pay modal
-    const [address, setAddress] = useState("");r
+    const [isPayModalOpen, setIsPayModalOpen] = useState(false);
+    const [address, setAddress] = useState("");
+    const [useDefaultAddress, setUseDefaultAddress] = useState(true); // State to switch between default and new address
     const [placedOrder, setPlacedOrder] = useState<PlaceOrderResponse | null>(null);
   
-
-
     const handleProceedToCheckout = () => {
       setIsPaymentModalOpen(true);
     };
+
+    const defaultAddress = `${session?.user?.address?.street_address}, ${session?.user?.address?.locality}, ${session?.user?.address?.region}, ${session?.user?.address?.postal_code}, ${session?.user?.address?.country}`;
+
+  
     const handleMakePayment = async () => {
-      if (address.trim() === "") {
-        alert("Please enter your address before proceeding.");
-        return;
-      }
+
       
-      const fullName = session?.user?.name || ""; // Fallback to an empty string if the name is undefined
+     
+  
+      
+  
+      const fullName = session?.user?.name || "";
       const [firstName, lastName] = fullName.split(" ");
-      const email = session?.user?.email || ""; 
-      
+      const email = session?.user?.email || "";
+  
       try {
-        const items = cart.map((item) => {
-          return {
-              skuCode: item.name, // Set dynamically based on the actual product ID
-              quantity: item.quantity // Set dynamically based on the actual quantity
-          };
-      });
+        const items = cart.map((item) => ({
+          skuCode: item.name,
+          quantity: item.quantity,
+        }));
         const order = {
           items: items,
-          total: totalPrice, // Set this based on the total amount of the order
-          shippingAddress: address, // Assuming 'address' is captured from the form or state
-          date: "2001-05-25", // Format the date as 'YYYY-MM-DD'
+          total: totalPrice,
+          shippingAddress: useDefaultAddress ? defaultAddress : address,
+          date: "2001-05-25",
           userDetails: {
-            email: email, // Replace with the actual user's email
-            firstName:firstName, // Replace with the actual user's first name
-            lastName: lastName // Replace with the actual user's last name
-          }
+            email: email,
+            firstName: firstName,
+            lastName: lastName,
+          },
         };
-        
-        const data= await placeOrder(order);
+  
+        const data = await placeOrder(order);
         setPlacedOrder(data);
-        alert("Order placed successfully!");
+        toast.success("Order placed successfully!");
         setCart([]);
+        setUseDefaultAddress(true);
         setIsPayModalOpen(true);
         setIsPaymentModalOpen(false);
-      }catch (error) {
-          alert(error);
-        }
-      //setIsPaymentModalOpen(false);
-       // Open Pay modal
+      } catch (error: any) {
+        toast.error(error);
+      }
     };
 
     const pay = async (orderId?: number) => {
@@ -339,19 +340,19 @@ export default function ECommerceApp() {
           throw new Error("Invalid order ID");
         }
        const data= await payOrder(orderId);
-        alert("Payment processed successfully!");
+        toast.success("Payment processed successfully!");
         setIsPayModalOpen(false);
-      } catch (error) {
-        alert(error);
+      } catch (error:any) {
+        toast.error(error);
       }
     }
   
-
     return (
       <>
         {/* Cart Section */}
         {isCartOpen && (
           <>
+            <Toaster />
             <div
               className="fixed inset-0 bg-black bg-opacity-50 z-40"
               onClick={() => setIsCartOpen(false)}
@@ -393,9 +394,7 @@ export default function ECommerceApp() {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity - 1)
-                          }
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
                         >
                           <MinusIcon className="h-4 w-4" />
                         </Button>
@@ -403,9 +402,7 @@ export default function ECommerceApp() {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity + 1)
-                          }
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         >
                           <PlusIcon className="h-4 w-4" />
                         </Button>
@@ -423,9 +420,7 @@ export default function ECommerceApp() {
                   <div className="mt-6 border-t pt-4">
                     <div className="flex justify-between items-center mb-4">
                       <span className="font-semibold">Total:</span>
-                      <span className="font-bold">
-                        ${totalPrice.toFixed(2)}
-                      </span>
+                      <span className="font-bold">${totalPrice.toFixed(2)}</span>
                     </div>
                     <Button
                       className="w-full"
@@ -439,51 +434,68 @@ export default function ECommerceApp() {
             </div>
           </>
         )}
-
+  
         {/* Payment Modal */}
         {isPaymentModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
             <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-
               <h2 className="text-2xl font-bold mb-4">Wish Order Details</h2>
               <p>
-                <>
-                  {cart.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between mb-4"
-                    >
-                      <div className="flex items-center">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-16 h-16 object-cover rounded-md mr-4"
-                        />
-                        <div>
-                          <h3 className="font-semibold">{item.name}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            ${item.price.toFixed(2)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="mx-5">{item.quantity}</span>
+                {cart.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between mb-4"
+                  >
+                    <div className="flex items-center">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-16 h-16 object-cover rounded-md mr-4"
+                      />
+                      <div>
+                        <h3 className="font-semibold">{item.name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          ${item.price.toFixed(2)}
+                        </p>
                       </div>
                     </div>
-                  ))}
-                </>
+                    <div className="flex items-center">
+                      <span className="mx-5">{item.quantity}</span>
+                    </div>
+                  </div>
+                ))}
               </p>
               <p className="mb-4 font-semibold">
                 Total Amount: ${totalPrice.toFixed(2)}
               </p>
-              <label className="block mb-2 font-medium">Address</label>
-              <input
-                type="text"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Enter your address"
-                className="w-full p-2 border rounded-md mb-4"
-              />
+  
+              <div className="flex items-center mb-4">
+                <input
+                  type="checkbox"
+                  checked={useDefaultAddress}
+                  onChange={() => setUseDefaultAddress(!useDefaultAddress)}
+                  className="mr-2"
+                />
+                <label className="font-medium">Use default address</label>
+              </div>
+  
+              {useDefaultAddress ? (
+                <div className="p-4 border rounded-lg mb-4">
+                  <h3 className="font-semibold">Default Address</h3>
+                  <p>{`${session?.user?.address?.street_address}, ${session?.user?.address?.locality}, ${session?.user?.address?.region}, ${session?.user?.address?.postal_code}, ${session?.user?.address?.country}`}</p>
+                </div>
+              ) : (
+                <>
+                  <label className="block mb-2 font-medium">New Address</label>
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Enter your address"
+                    className="w-full p-2 border rounded-md mb-4"
+                  />
+                </>
+              )}
               <div className="flex justify-end">
                 <Button
                   variant="ghost"
@@ -492,23 +504,20 @@ export default function ECommerceApp() {
                 >
                   Cancel
                 </Button>
-
                 <Button onClick={handleMakePayment}>Add to Wish List</Button>
-
               </div>
             </div>
           </div>
         )}
   
-        {/* Pay Modal */}
-        {isPayModalOpen && (
+           {/* Pay Modal */}
+           {isPayModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
   <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
     <h2 className="text-2xl font-bold mb-4">Pay</h2>
     {/* Dummy Payment Gateway */}
     <form onSubmit={(e) => { 
       e.preventDefault(); 
-      alert("Payment processed successfully!");
     }}>
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
@@ -545,15 +554,21 @@ export default function ECommerceApp() {
         <span className="text-xl font-bold text-green-600">${placedOrder?.total}</span>
       </div>
       <div className="flex justify-end space-x-4 mt-4">
-        <Button onClick={()=>pay(placedOrder?.orderId)}>
-          Pay Now
-        </Button>
-        <Button
-          variant="secondary" 
-          onClick={() => setIsPayModalOpen(false)} 
-        >
-          Pay Later
-        </Button>
+      <button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+                onClick={() => pay(placedOrder?.orderId)}
+              >
+                Confirm Payment
+              </button>
+              <button
+                type="reset"
+                className="w-full bg-gray-400 text-white py-2 rounded-lg hover:bg-gray-500"
+                onClick={() => setIsPayModalOpen(false)}
+              >
+                Pay Later
+              </button>
+      
       </div>
     </form>
   </div>
@@ -564,6 +579,8 @@ export default function ECommerceApp() {
       </>
     );
   };
+  
+  
 
   return (
     <div className="flex flex-col min-h-screen">
