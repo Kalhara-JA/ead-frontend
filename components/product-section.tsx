@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { Card, CardContent } from "./ui/card";
+import React, { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -20,14 +19,20 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getQuantityOfAProduct } from "@/services/productService";
+import ProductDialog from "@/app/product/ProductDialog";
+import FiltersSidebar from "@/app/product/filterSlideBar";
+import { Toaster } from "react-hot-toast";
 
 interface Product {
   id: number;
   name: string;
+  skuCode: string;
   price: number;
   image: string;
   category: string;
   brand: string;
+  description: string;
 }
 
 interface ProductPageProps {
@@ -56,16 +61,40 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
       product.price >= priceRange[0] &&
       product.price <= priceRange[1]
   );
+  console.log(filteredProducts);
+
+  const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
+
+  // Fetch quantities for each product
+  useEffect(() => {
+    const fetchQuantities = async () => {
+      const quantitiesMap: { [key: number]: number } = {};
+      for (const product of filteredProducts) {
+        const quantity = await getQuantityOfAProduct(product.skuCode);
+        quantitiesMap[product.id] = quantity;
+      }
+      setQuantities(quantitiesMap);
+    };
+
+    fetchQuantities();
+  }, []);
 
   return (
     <main>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-white">
+      <div className="flex items-center justify-between p-2 bg-white">
+        <Toaster position="top-right" />
         <h1 className="text-xl font-bold">Our Products</h1>
         <Dialog>
-          <DialogTrigger asChild>
+          <Input
+            placeholder="Search Products..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm bg-transparent border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-blue-300"
+          />
+          {/* <DialogTrigger asChild>
             <Button variant="outline">Edit Profile</Button>
-          </DialogTrigger>
+          </DialogTrigger> */}
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Edit profile</DialogTitle>
@@ -94,8 +123,8 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
         </Dialog>
       </div>
       <header className="flex items-center justify-between p-4 border-b bg-white">
-        <div className="flex items-center space-x-4">
-          {/* Burger Menu */}
+        {/* <div className="flex items-center space-x-4">
+      
           <Button
             variant="outline"
             onClick={() => setIsFilterOpen((prev) => !prev)}
@@ -103,91 +132,28 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
           >
             ☰
           </Button>
-        </div>
+        </div> */}
         {/* Transparent Search Bar */}
-        <Input
+        {/* <Input
           placeholder="Search Products..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm bg-transparent border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-blue-300"
-        />
+        /> */}
       </header>
 
       {/* Filters Sidebar for Mobile */}
       {isFilterOpen && (
-        <aside className="md:hidden bg-gray-100 p-4 border-b">
-          <h2 className="text-lg font-semibold mb-4">Filters</h2>
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold mb-2">Category</h3>
-            <Select
-              onValueChange={(value) =>
-                setSelectedCategory(value === "all" ? "" : value)
-              }
-              value={selectedCategory || "all"}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold mb-2">Brand</h3>
-            <Select
-              onValueChange={(value) =>
-                setSelectedBrand(value === "all" ? "" : value)
-              }
-              value={selectedBrand || "all"}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Brand" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                {brands.map((brand) => (
-                  <SelectItem key={brand} value={brand}>
-                    {brand}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold mb-2">Price Range</h3>
-            <Slider
-              value={priceRange}
-              onValueChange={(value) =>
-                setPriceRange(value as [number, number])
-              }
-              min={0}
-              max={1000000}
-              step={10}
-              className="w-full"
-            />
-            <div className="flex justify-between text-sm mt-2">
-              <span>${priceRange[0]}</span>
-              <span>${priceRange[1]}</span>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSelectedCategory("");
-              setSelectedBrand("");
-              setPriceRange([0, 1000000]);
-            }}
-            className="w-full hover:bg-gray-200 focus:ring focus:ring-blue-300"
-          >
-            Reset Filters
-          </Button>
-        </aside>
+        <FiltersSidebar
+          categories={categories}
+          brands={brands}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          selectedBrand={selectedBrand}
+          setSelectedBrand={setSelectedBrand}
+          priceRange={priceRange}
+          setPriceRange={setPriceRange}
+        />
       )}
 
       {/* Main Content */}
@@ -287,67 +253,12 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {filteredProducts.map((product) => (
-                <div key={product.id}>
-                  <Dialog>
-                    <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle>Edit profile</DialogTitle>
-                        <DialogDescription>
-                          Make changes to your profile here. Click save when
-                          you're done.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="name" className="text-right">
-                            Name
-                          </Label>
-                          <Input
-                            id="name"
-                            value="Pedro Duarte"
-                            className="col-span-3"
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="username" className="text-right">
-                            Username
-                          </Label>
-                          <Input
-                            id="username"
-                            value="@peduarte"
-                            className="col-span-3"
-                          />
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button type="submit">Save changes</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                    <DialogTrigger asChild>
-                      <Card>
-                        <CardContent className="p-4">
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-full h-48 object-cover mb-4 rounded-md"
-                          />
-                          <h2 className="text-xl font-semibold mb-2">
-                            {product.name}
-                          </h2>
-                          <p className="text-muted-foreground mb-4">
-                            ${product.price.toFixed(2)}
-                          </p>
-                          <Button
-                            onClick={() => addToCart(product)}
-                            className="w-full"
-                          >
-                            Add to Cart
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </DialogTrigger>
-                  </Dialog>
-                </div>
+                <ProductDialog
+                  key={product.id}
+                  product={product}
+                  quantity={quantities[product.id] || 0}
+                  addToCart={addToCart}
+                />
               ))}
             </div>
           )}
