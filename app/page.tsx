@@ -21,6 +21,9 @@ import SiteFooter from "@/components/site-footer";
 import ProductPage from "@/components/product-section";
 import Header from "@/components/site-header";
 import { getAllProducts } from "@/services/productService";
+import { useSession } from "next-auth/react";
+import { PlaceOrderResponse } from "@/types/orderTypes";
+import { payOrder, placeOrder } from "@/services/orderService";
 
 const products = [
   {
@@ -264,24 +267,72 @@ export default function ECommerceApp() {
       <CTASignUpSection />
     </main>
   );
+  const { data: session } = useSession();
   const renderCart = () => {
+
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [isPayModalOpen, setIsPayModalOpen] = useState(false); // New state for Pay modal
     const [address, setAddress] = useState("");
+    const [placedOrder, setPlacedOrder] = useState<PlaceOrderResponse | null>(null);
   
     const handleProceedToCheckout = () => {
       setIsPaymentModalOpen(true);
     };
   
-    const handleMakePayment = () => {
+    const  handleMakePayment = async() => {
       if (address.trim() === "") {
         alert("Please enter your address before proceeding.");
         return;
       }
-      // Add payment logic here
-      alert("Payment successful!");
-      setIsPaymentModalOpen(false);
-      setIsCartOpen(false); // Close the cart after payment
+      
+      const fullName = session?.user?.name || ""; // Fallback to an empty string if the name is undefined
+      const [firstName, lastName] = fullName.split(" ");
+      const email = session?.user?.email || ""; 
+      
+      try {
+        const items = cart.map((item) => {
+          return {
+              skuCode: item.name, // Set dynamically based on the actual product ID
+              quantity: item.quantity // Set dynamically based on the actual quantity
+          };
+      });
+        const order = {
+          items: items,
+          total: totalPrice, // Set this based on the total amount of the order
+          shippingAddress: address, // Assuming 'address' is captured from the form or state
+          date: "2001-05-25", // Format the date as 'YYYY-MM-DD'
+          userDetails: {
+            email: email, // Replace with the actual user's email
+            firstName:firstName, // Replace with the actual user's first name
+            lastName: lastName // Replace with the actual user's last name
+          }
+        };
+        
+        const data= await placeOrder(order);
+        setPlacedOrder(data);
+        alert("Order placed successfully!");
+        setCart([]);
+        setIsPayModalOpen(true);
+        setIsPaymentModalOpen(false);
+      }catch (error) {
+          alert(error);
+        }
+      //setIsPaymentModalOpen(false);
+       // Open Pay modal
     };
+
+    const pay = async (orderId?: number) => {
+      try {
+        if (!orderId) {
+          throw new Error("Invalid order ID");
+        }
+       const data= await payOrder(orderId);
+        alert("Payment processed successfully!");
+        setIsPayModalOpen(false);
+      } catch (error) {
+        alert(error);
+      }
+    }
   
     return (
       <>
@@ -376,9 +427,8 @@ export default function ECommerceApp() {
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
             <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
               <h2 className="text-2xl font-bold mb-4">Payment Details</h2>
-              
               <p>
-              <>
+                <>
                   {cart.map((item) => (
                     <div
                       key={item.id}
@@ -421,10 +471,72 @@ export default function ECommerceApp() {
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleMakePayment}>Make a Payment</Button>
+                <Button onClick={handleMakePayment}>Place Order</Button>
               </div>
             </div>
           </div>
+        )}
+  
+        {/* Pay Modal */}
+        {isPayModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+  <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+    <h2 className="text-2xl font-bold mb-4">Pay</h2>
+    {/* Dummy Payment Gateway */}
+    <form onSubmit={(e) => { 
+      e.preventDefault(); 
+      alert("Payment processed successfully!");
+    }}>
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+        <input
+          type="text"
+          placeholder="1234 5678 9012 3456"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        />
+      </div>
+      <div className="flex justify-between mb-4">
+        <div className="w-1/2 pr-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+          <input
+            type="text"
+            placeholder="MM/YY"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        <div className="w-1/2 pl-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+          <input
+            type="text"
+            placeholder="123"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+      </div>
+      {/* Display Payment Amount */}
+      <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-4 flex justify-between items-center">
+        <span className="text-lg font-semibold text-gray-800">Total Amount</span>
+        <span className="text-xl font-bold text-green-600">${placedOrder?.total}</span>
+      </div>
+      <div className="flex justify-end space-x-4 mt-4">
+        <Button onClick={()=>pay(placedOrder?.orderId)}>
+          Pay Now
+        </Button>
+        <Button
+          variant="secondary" 
+          onClick={() => setIsPayModalOpen(false)} 
+        >
+          Pay Later
+        </Button>
+      </div>
+    </form>
+  </div>
+</div>
+
+        
         )}
       </>
     );
