@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import {
   Select,
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getQuantityOfAProduct } from "@/services/productService";
 
 interface Product {
   id: number;
@@ -59,6 +60,22 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
       product.price <= priceRange[1]
   );
   console.log(filteredProducts);
+
+  const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
+
+  // Fetch quantities for each product
+  useEffect(() => {
+    const fetchQuantities = async () => {
+      const quantitiesMap: { [key: number]: number } = {};
+      for (const product of filteredProducts) {
+        const quantity = await getQuantityOfAProduct(product.skuCode);
+        quantitiesMap[product.id] = quantity;
+      }
+      setQuantities(quantitiesMap);
+    };
+
+    fetchQuantities();
+  }, []);
 
   return (
     <main>
@@ -321,10 +338,20 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
                       </div>
                       <DialogFooter>
                         <Button
-                          onClick={() => addToCart(product)}
+                          onClick={async () => {
+                            const quantity = await getQuantityOfAProduct(
+                              product.skuCode
+                            );
+                            if (quantity > 0) {
+                              addToCart(product);
+                            }
+                          }}
                           className="w-full"
+                          disabled={quantities[product.id] <= 0} // Disable if quantity <= 0
                         >
-                          Add to Cart
+                          {quantities[product.id] <= 0
+                            ? "Out of Stock"
+                            : "Add to Cart"}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -343,13 +370,21 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
                             ${product.price.toFixed(2)}
                           </p>
                           <Button
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
-                              addToCart(product);
+                              const quantity = await getQuantityOfAProduct(
+                                product.skuCode
+                              );
+                              if (quantity > 0) {
+                                addToCart(product);
+                              }
                             }}
                             className="w-full"
+                            disabled={quantities[product.id] <= 0} // Disable if quantity <= 0
                           >
-                            Add to Cart
+                            {quantities[product.id] <= 0
+                              ? "Out of Stock"
+                              : "Add to Cart"}
                           </Button>
                         </CardContent>
                       </Card>
