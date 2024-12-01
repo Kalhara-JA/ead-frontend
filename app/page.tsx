@@ -22,6 +22,8 @@ import ProductPage from "@/components/product-section";
 import Header from "@/components/site-header";
 import { getAllProducts } from "@/services/productService";
 import { Toaster } from "react-hot-toast";
+import axios from "axios";
+import { postOrders } from "@/services/orderServices"; 
 
 const products = [
   {
@@ -109,7 +111,15 @@ const deals = [
 export default function ECommerceApp() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("landing");
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState<
+    {
+      id: number;
+      name: string;
+      price: number;
+      image: string;
+      quantity: number;
+    }[]
+  >([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const [products, setProducts] = useState([]);
@@ -265,103 +275,199 @@ export default function ECommerceApp() {
       <CTASignUpSection />
     </main>
   );
+  const renderCart = () => {
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [address, setAddress] = useState("");
 
-  const renderCart = () => (
-    // Cart Section
-    <>
-      {isCartOpen && (
-        <>
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
-            onClick={() => setIsCartOpen(false)}
-          />
-          <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-background shadow-lg p-6 overflow-y-auto z-50">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Your Cart</h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsCartOpen(false)}
-              >
-                <XIcon className="h-6 w-6" />
-              </Button>
-            </div>
-            {cart.length === 0 ? (
-              <p className="text-muted-foreground">Your cart is empty.</p>
-            ) : (
-              <>
-                {cart.map((item) => (
-                  <div
-                    // @ts-ignore
-                    key={item.id}
-                    className="flex items-center justify-between mb-4"
-                  >
-                    <div className="flex items-center">
-                      <img
-                        // @ts-ignore
-                        src={item.image}
-                        // @ts-ignore
-                        alt={item.name}
-                        className="w-16 h-16 object-cover rounded-md mr-4"
-                      />
-                      <div>
-                        {/* @ts-ignore */}
-                        <h3 className="font-semibold">{item.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {/* @ts-ignore */}
-                          {/* ${item.price.toFixed(2)} */}
-                        </p>
+    const handleProceedToCheckout = () => {
+      setIsPaymentModalOpen(true);
+    };
+    const handleMakePayment = async () => {
+      if (address.trim() === "") {
+        alert("Please enter your address before proceeding.");
+        return;
+      }
+      const orderData = {
+        items: cart.map((item) => ({
+          skuCode : item.name,
+          quantity: item.quantity,
+        })),
+        total: totalPrice.toFixed(2),
+        shippingAddress : address,
+        date : new Date().toISOString().split('T')[0],
+        userDetails : {
+          email : "Any",
+          firstName : "Any",
+          lastName : "Any",
+        },
+      };
+      console.log(orderData);
+      try {
+        const response = await postOrders(orderData);
+        console.log("Order saved successfully:", response.data);
+      } catch (error) {
+        console.error("Error saving order:", error);
+        alert("An error occurred while saving your order. Please try again.");
+        return;
+      }
+      alert("Payment successful!");
+      setIsPaymentModalOpen(false);
+      setIsCartOpen(false); // Close the cart after payment
+    };
+
+    return (
+      <>
+        {/* Cart Section */}
+        {isCartOpen && (
+          <>
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 z-40"
+              onClick={() => setIsCartOpen(false)}
+            />
+            <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-background shadow-lg p-6 overflow-y-auto z-50">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Your Cart</h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsCartOpen(false)}
+                >
+                  <XIcon className="h-6 w-6" />
+                </Button>
+              </div>
+              {cart.length === 0 ? (
+                <p className="text-muted-foreground">Your cart is empty.</p>
+              ) : (
+                <>
+                  {cart.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between mb-4"
+                    >
+                      <div className="flex items-center">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-16 h-16 object-cover rounded-md mr-4"
+                        />
+                        <div>
+                          <h3 className="font-semibold">{item.name}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            ${item.price.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity - 1)
+                          }
+                        >
+                          <MinusIcon className="h-4 w-4" />
+                        </Button>
+                        <span className="mx-2">{item.quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity + 1)
+                          }
+                        >
+                          <PlusIcon className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="ml-2"
+                          onClick={() => removeFromCart(item.id)}
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() =>
-                          //@ts-ignore
-                          updateQuantity(item.id, item.quantity - 1)
-                        }
-                      >
-                        <MinusIcon className="h-4 w-4" />
-                      </Button>
-                      {/* @ts-ignore */}
-                      <span className="mx-2">{item.quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() =>
-                          //@ts-ignore
-                          updateQuantity(item.id, item.quantity + 1)
-                        }
-                      >
-                        <PlusIcon className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="ml-2"
-                        //@ts-ignore
-                        onClick={() => removeFromCart(item.id)}
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
+                  ))}
+                  <div className="mt-6 border-t pt-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="font-semibold">Total:</span>
+                      <span className="font-bold">
+                        ${totalPrice.toFixed(2)}
+                      </span>
                     </div>
+                    <Button
+                      className="w-full"
+                      onClick={handleProceedToCheckout}
+                    >
+                      Proceed to Checkout
+                    </Button>
                   </div>
-                ))}
-                <div className="mt-6 border-t pt-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="font-semibold">Total:</span>
-                    <span className="font-bold">${totalPrice.toFixed(2)}</span>
-                  </div>
-                  <Button className="w-full">Proceed to Checkout</Button>
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Payment Modal */}
+        {isPaymentModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+              <h2 className="text-2xl font-bold mb-4">Wish Order Details</h2>
+
+              <p>
+                <>
+                  {cart.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between mb-4"
+                    >
+                      <div className="flex items-center">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-16 h-16 object-cover rounded-md mr-4"
+                        />
+                        <div>
+                          <h3 className="font-semibold">{item.name}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            ${item.price.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="mx-5">{item.quantity}</span>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              </p>
+              <p className="mb-4 font-semibold">
+                Total Amount: ${totalPrice.toFixed(2)}
+              </p>
+              <label className="block mb-2 font-medium">Address</label>
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Enter your address"
+                className="w-full p-2 border rounded-md mb-4"
+              />
+              <div className="flex justify-end">
+                <Button
+                  variant="ghost"
+                  className="mr-2"
+                  onClick={() => setIsPaymentModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleMakePayment}>Add to Wish List</Button>
+              </div>
+            </div>
           </div>
-        </>
-      )}
-    </>
-  );
+        )}
+      </>
+    );
+  };
 
   return (
     <div className="flex flex-col min-h-screen">

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import AuthButton from './AuthButton';
+import { useSession } from 'next-auth/react';
 
   //@ts-ignore
 const Header = ({ setCurrentPage, cart, setCart, isCartOpen, setIsCartOpen }) => {
@@ -58,7 +59,7 @@ const Header = ({ setCurrentPage, cart, setCart, isCartOpen, setIsCartOpen }) =>
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   //@ts-ignore
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  
+  const { data: session } = useSession();
 
   return (
     <div className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -75,7 +76,7 @@ const Header = ({ setCurrentPage, cart, setCart, isCartOpen, setIsCartOpen }) =>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             <a
               className="transition-colors hover:text-foreground/80 text-foreground/60"
-              href="#"
+              href="/#products-section"
               onClick={() => setCurrentPage("products")}
             >
               Products
@@ -161,10 +162,25 @@ const Header = ({ setCurrentPage, cart, setCart, isCartOpen, setIsCartOpen }) =>
           </nav>
           <div className="w-full flex-1 md:w-auto md:flex-none">
             <div>
+              {session ? <a href='/orders'>
               <Button
                 variant="outline"
                 size="icon"
-                className="relative"
+                className="relative mr-4"
+                onClick={() => {
+                  setCurrentPage("orders");
+                }}
+              >
+                <ShoppingBag className="h-4 w-4" />
+
+              </Button>
+              </a> : ""}
+              
+              <Button
+                variant="outline"
+                size="icon"
+                className="relative mr-4"
+                
                 onClick={() => setIsCartOpen(!isCartOpen)}
               >
                 <ShoppingCartIcon className="h-4 w-4" />
