@@ -9,8 +9,6 @@ interface StatusModalProps {
   onSave: (newStatus: string) => void;
   order: Order;
 }
-
-
 const StatusModal: React.FC<StatusModalProps> = ({
   isOpen,
   onClose,
@@ -34,16 +32,16 @@ const StatusModal: React.FC<StatusModalProps> = ({
           onChange={(e) => setNewStatus(e.target.value)}
           className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none hover:bg-gray-100"
         >
-          <option value="Pending">Pending</option>
-          <option value="Orderd">Orderd</option>
-          <option value="Recived">Recived</option>
-          <option value="Canceled Orders">Canceled Orders</option>
+          <option value="PENDING">PENDING</option>
+          <option value="ORDERED">ORDERED</option>
+          <option value="RECIVED">RECIVED</option>
+          <option value="CANCELED">CANCELED</option>
         </select>
         <div className="flex justify-end mt-6 space-x-4">
           <button onClick={onClose} className="py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition">
             Cancel
           </button>
-          <button onClick={() => onSave(newStatus)} className="py-2 px-4 bg-black hover:bg-gray-600 text-white rounded-md transition">
+          <button onClick={() => { onSave(newStatus); onClose(); }} className="py-2 px-4 bg-black hover:bg-gray-600 text-white rounded-md transition">
             Save
           </button>
         </div>
