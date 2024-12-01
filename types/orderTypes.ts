@@ -8,7 +8,7 @@ export type Order = {
   deliveryStatus: string;
   items: Item[],
   }
-  
+
   export type Item = {
       skuCode: string;
       quantity: number;
