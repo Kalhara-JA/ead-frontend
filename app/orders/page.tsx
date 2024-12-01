@@ -9,6 +9,8 @@ import DetailsModal from "@/components/orders/detailsmodal";
 import StatusModal from "@/components/orders/statusModal";
 import PaymentModal from "@/components/orders/paymentModal";
 import { Order } from "@/types/orderTypes";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function OrderPage() {
   const [ordersState, setOrdersState] = useState<Order[]>([]);
@@ -31,11 +33,21 @@ function OrderPage() {
 
   const filteredOrders = ordersState.filter(
     (order) =>
-      (filters.statusFilter === "All" || order.deliveryStatus === filters.statusFilter) &&
+      (filters.statusFilter === "All" ||
+        order.deliveryStatus === filters.statusFilter) &&
       (!filters.filterDate || order.date === filters.filterDate) &&
       order.id.toString().includes(filters.searchTerm)
   );
-  console.log("orders", filteredOrders)
+  const handlePaymentSuccess = (orderId: number) => {
+    toast.success("Payment was successful!");
+    setOrdersState((prev) =>
+      prev.map((order) =>
+        order.id === orderId ? { ...order, paymentStatus: "PAID" } : order
+      )
+    );
+    setIsPaymentModalOpen(false);
+  };
+  console.log("orders", filteredOrders);
   return (
     <>
       <Header
@@ -56,12 +68,15 @@ function OrderPage() {
             setIsPaymentModalOpen={setIsPaymentModalOpen}
           />
         </div>
-        
       </section>
       {isDetailsModalOpen && selectedOrder && (
-        <DetailsModal isOpen={isDetailsModalOpen} order={selectedOrder} onClose={() => setIsDetailsModalOpen(false)} />
+        <DetailsModal
+          isOpen={isDetailsModalOpen}
+          order={selectedOrder}
+          onClose={() => setIsDetailsModalOpen(false)}
+        />
       )}
-      
+
       {isStatusModalOpen && selectedOrder && (
         <StatusModal
           isOpen={isStatusModalOpen}
@@ -76,7 +91,9 @@ function OrderPage() {
           onSave={(newStatus: any) =>
             setOrdersState((prev) =>
               prev.map((o) =>
-                o.id === selectedOrder.id ? { ...o, deliveryStatus: newStatus } : o
+                o.id === selectedOrder.id
+                  ? { ...o, deliveryStatus: newStatus }
+                  : o
               )
             )
           }
@@ -85,9 +102,10 @@ function OrderPage() {
       {isPaymentModalOpen && selectedOrder && (
         <PaymentModal
           order={selectedOrder}
-          onClose={() => setIsPaymentModalOpen(false)} isOpen={false} onPayment={function (): void {
-            throw new Error("Function not implemented.");
-          } }        />
+          onClose={() => setIsPaymentModalOpen(false)}
+          isOpen={isPaymentModalOpen}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
       )}
       <SiteFooter />
     </>

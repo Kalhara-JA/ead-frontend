@@ -36,7 +36,7 @@ function OrderFilter({ filters, setFilters }: OrderFilterProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          {["All", "Pending", "Orderd", "Recived", "Canceled Orders"].map((status) => (
+          {["All", "PENDING", "ORDERED", "RECIVED", "CANCELED"].map((status) => (
             <DropdownMenuItem key={status} onClick={() => setFilters({ ...filters, statusFilter: status })}>
               {status}
             </DropdownMenuItem>
