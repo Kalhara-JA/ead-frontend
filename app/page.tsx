@@ -22,6 +22,7 @@ import ProductPage from "@/components/product-section";
 import Header from "@/components/site-header";
 import { getAllProducts } from "@/services/productService";
 import axios from "axios";
+import { postOrders } from "@/services/orderServices"; 
 
 const products = [
   {
@@ -301,8 +302,7 @@ export default function ECommerceApp() {
       };
       console.log(orderData);
       try {
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/v1/orders`, orderData, {
-        });
+        const response = await postOrders(orderData);
         console.log("Order saved successfully:", response.data);
       } catch (error) {
         console.error("Error saving order:", error);

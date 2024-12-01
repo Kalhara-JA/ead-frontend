@@ -11,6 +11,7 @@ import PaymentModal from "@/components/orders/paymentModal";
 import { Order } from "@/types/orderTypes";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { getAllOrders } from "@/services/orderServices";
 
 function OrderPage() {
   const [ordersState, setOrdersState] = useState<Order[]>([]);
@@ -26,9 +27,16 @@ function OrderPage() {
   });
 
   useEffect(() => {
-    axiosInstance
-      .get(`${process.env.NEXT_PUBLIC_API_URL}/v1/orders`)
-      .then((response) => setOrdersState(response.data));
+    const fetchOrders = async () => {
+      try {
+        const orders = await getAllOrders();
+        setOrdersState(orders);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        toast.error("Failed to fetch orders");
+      }
+    };
+    fetchOrders();
   }, []);
 
   const filteredOrders = ordersState.filter(
