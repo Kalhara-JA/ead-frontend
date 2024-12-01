@@ -24,6 +24,9 @@ import { getAllProducts } from "@/services/productService";
 import { useSession } from "next-auth/react";
 import { PlaceOrderResponse } from "@/types/orderTypes";
 import { payOrder, placeOrder } from "@/services/orderService";
+import { Toaster } from "react-hot-toast";
+import axios from "axios";
+import { postOrders } from "@/services/orderServices"; 
 
 const products = [
   {
@@ -111,7 +114,15 @@ const deals = [
 export default function ECommerceApp() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("landing");
-  const [cart, setCart] = useState<{ id: number; name: string; price: number; image: string; quantity: number }[]>([]);
+  const [cart, setCart] = useState<
+    {
+      id: number;
+      name: string;
+      price: number;
+      image: string;
+      quantity: number;
+    }[]
+  >([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const [products, setProducts] = useState([]);
@@ -272,14 +283,15 @@ export default function ECommerceApp() {
 
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isPayModalOpen, setIsPayModalOpen] = useState(false); // New state for Pay modal
-    const [address, setAddress] = useState("");
+    const [address, setAddress] = useState("");r
     const [placedOrder, setPlacedOrder] = useState<PlaceOrderResponse | null>(null);
   
+
+
     const handleProceedToCheckout = () => {
       setIsPaymentModalOpen(true);
     };
-  
-    const  handleMakePayment = async() => {
+    const handleMakePayment = async () => {
       if (address.trim() === "") {
         alert("Please enter your address before proceeding.");
         return;
@@ -334,6 +346,7 @@ export default function ECommerceApp() {
       }
     }
   
+
     return (
       <>
         {/* Cart Section */}
@@ -410,9 +423,14 @@ export default function ECommerceApp() {
                   <div className="mt-6 border-t pt-4">
                     <div className="flex justify-between items-center mb-4">
                       <span className="font-semibold">Total:</span>
-                      <span className="font-bold">${totalPrice.toFixed(2)}</span>
+                      <span className="font-bold">
+                        ${totalPrice.toFixed(2)}
+                      </span>
                     </div>
-                    <Button className="w-full" onClick={handleProceedToCheckout}>
+                    <Button
+                      className="w-full"
+                      onClick={handleProceedToCheckout}
+                    >
                       Proceed to Checkout
                     </Button>
                   </div>
@@ -421,12 +439,13 @@ export default function ECommerceApp() {
             </div>
           </>
         )}
-  
+
         {/* Payment Modal */}
         {isPaymentModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
             <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-              <h2 className="text-2xl font-bold mb-4">Payment Details</h2>
+
+              <h2 className="text-2xl font-bold mb-4">Wish Order Details</h2>
               <p>
                 <>
                   {cart.map((item) => (
@@ -454,7 +473,9 @@ export default function ECommerceApp() {
                   ))}
                 </>
               </p>
-              <p className="mb-4 font-semibold">Total Payment: ${totalPrice.toFixed(2)}</p>
+              <p className="mb-4 font-semibold">
+                Total Amount: ${totalPrice.toFixed(2)}
+              </p>
               <label className="block mb-2 font-medium">Address</label>
               <input
                 type="text"
@@ -471,7 +492,9 @@ export default function ECommerceApp() {
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleMakePayment}>Place Order</Button>
+
+                <Button onClick={handleMakePayment}>Add to Wish List</Button>
+
               </div>
             </div>
           </div>
