@@ -283,7 +283,7 @@ export default function ECommerceApp() {
 
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isPayModalOpen, setIsPayModalOpen] = useState(false); // New state for Pay modal
-    const [address, setAddress] = useState("");r
+    const [address, setAddress] = useState("");
     const [placedOrder, setPlacedOrder] = useState<PlaceOrderResponse | null>(null);
   
 
