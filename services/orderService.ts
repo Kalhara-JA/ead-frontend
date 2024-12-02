@@ -40,3 +40,25 @@ export const getAllOrder = async () => {
           throw Error("payment failed").message;	
         }
       };
+
+      export const fetchOrderByOrderNumber = async (orderNumber:string) => {
+        try {
+          const response = await axiosInstance.get(`/v1/orders/${orderNumber}`
+          );
+          return response.data;
+        } catch (error) {
+          console.error("Error fetching Order:", error);
+          throw error;
+        }
+      };
+
+      export const getMyOrders = async (email?:string) => {
+        try {
+            const response = await axiosInstance.get(`/v1/orders/user/${email}/orders`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching orders:", error);
+            throw error;
+        }
+    };
+    

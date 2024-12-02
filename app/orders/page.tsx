@@ -9,9 +9,15 @@ import DetailsModal from "@/components/orders/detailsmodal";
 import StatusModal from "@/components/orders/statusModal";
 import PaymentModal from "@/components/orders/paymentModal";
 import { Order } from "@/types/orderTypes";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+//import { toast } from "react-toastify";
+//import "react-toastify/dist/ReactToastify.css";
 import { getAllOrders } from "@/services/orderServices";
+import PayModal from "@/components/orders/payModal";
+import { getMyOrders, payOrder } from "@/services/orderService";
+import toast, { Toaster } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+
 
 function OrderPage() {
   const [ordersState, setOrdersState] = useState<Order[]>([]);
@@ -19,25 +25,48 @@ function OrderPage() {
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const { data: session } = useSession();
 
   const [filters, setFilters] = useState({
     searchTerm: "",
     statusFilter: "All",
     filterDate: "",
   });
+  const router = useRouter();
+
+  const handleNavigation = (orderNumber:string) => {
+    router.push(`/orders/${orderNumber}`);
+  };
+
+
+  const pay = async (orderId?: number) => {
+    try {
+      if (!orderId) {
+        throw new Error("Invalid order ID");
+      }
+     const data= await payOrder(orderId);
+      toast.success("Payment processed successfully!");
+      fetchOrders();
+      setIsPaymentModalOpen(false);
+    } catch (error:any) {
+      toast.error(error);
+    }
+  }
+
+  const fetchOrders = async () => {
+    try {
+      const orders = await getMyOrders(session?.user?.email);
+      setOrdersState(orders);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      toast.error("Failed to fetch orders");
+    }
+  };
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const orders = await getAllOrders();
-        setOrdersState(orders);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-        toast.error("Failed to fetch orders");
-      }
-    };
+  if(session)
     fetchOrders();
-  }, []);
+  }, [session]);
 
   const filteredOrders = ordersState.filter(
     (order) =>
@@ -58,6 +87,7 @@ function OrderPage() {
   console.log("orders", filteredOrders);
   return (
     <>
+    <Toaster/>
       <Header
         setCurrentPage={() => {}}
         cart={[]}
@@ -71,7 +101,7 @@ function OrderPage() {
           <OrderTable
             orders={filteredOrders}
             setSelectedOrder={setSelectedOrder}
-            setIsDetailsModalOpen={setIsDetailsModalOpen}
+            setIsDetailsModalOpen={handleNavigation}
             setIsStatusModalOpen={setIsStatusModalOpen}
             setIsPaymentModalOpen={setIsPaymentModalOpen}
           />
@@ -108,12 +138,7 @@ function OrderPage() {
         />
       )}
       {isPaymentModalOpen && selectedOrder && (
-        <PaymentModal
-          order={selectedOrder}
-          onClose={() => setIsPaymentModalOpen(false)}
-          isOpen={isPaymentModalOpen}
-          onPaymentSuccess={handlePaymentSuccess}
-        />
+         <PayModal orderId={selectedOrder.id} total={selectedOrder.total} pay={pay} setIsPayModalOpen={setIsPaymentModalOpen} />
       )}
       <SiteFooter />
     </>
