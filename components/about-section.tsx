@@ -1,35 +1,32 @@
-import React from 'react';
+import React from "react";
 
 const AboutSection = React.forwardRef((props, ref) => (
   <section
-//   @ts-ignore
+    //   @ts-ignore
     ref={ref}
     className="w-full py-12 md:py-24 lg:py-32 bg-muted"
   >
     <div className="container px-4 md:px-6">
       <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-8">
-        About Easy UI
+        About Shop@Us
       </h2>
       <div className="max-w-3xl mx-auto text-center">
         <p className="text-muted-foreground mb-6">
-          At Easy UI, we believe in the power of intuitive design and
-          seamless user experiences. Our mission is to revolutionize the way
-          people interact with software, making it more accessible,
-          efficient, and enjoyable.
+          At Shop@Us, we are dedicated to transforming how people shop for
+          products and services online. Our mission is to create a platform
+          where convenience, variety, and satisfaction meet seamlessly.
         </p>
         <p className="text-muted-foreground mb-6">
-          Founded by a team of passionate UI/UX designers and developers,
-          Easy UI is committed to delivering software solutions that not
-          only meet your needs but exceed your expectations. We understand
-          that in today's fast-paced digital world, ease of use is
-          paramount.
+          Founded by a passionate team of innovators and e-commerce enthusiasts,
+          Shop@Us aims to set new standards in online shopping experiences. We
+          understand that your time is valuable, and our platform is designed to
+          save you time while providing exceptional choices.
         </p>
         <p className="text-muted-foreground">
-          Our curated selection of SaaS products embodies our philosophy of
-          user-centric design. Whether you're looking for marketing tools,
-          design software, or cutting-edge AI solutions, we ensure that
-          every product in our catalog adheres to the highest standards of
-          usability and aesthetic appeal.
+          From everyday essentials to niche products, our curated catalog is
+          built to cater to your unique needs. At Shop@Us, we prioritize
+          quality, affordability, and ease of use, ensuring that every
+          interaction leaves you delighted and confident in your choice.
         </p>
       </div>
     </div>
