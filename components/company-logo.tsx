@@ -4,27 +4,27 @@ const CompanyLogoSection = () => {
   const companies = [
     {
       name: "Slack",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Slack_icon_2019.svg/2048px-Slack_icon_2019.svg.png",
+      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpZaABt9vGAjXTTSDc8XJ0JOkcN3bzHq0s3g&s",
     },
     {
       name: "Salesforce",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Salesforce.com_logo.svg/2560px-Salesforce.com_logo.svg.png",
+      logo: "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcRxJMODeCqBISnfHxNZ2jge4Rp8l3e8-qy9NlIMXbXFh2sRfnHA",
     },
     {
       name: "Trello",
-      logo: "https://upload.wikimedia.org/wikipedia/en/thumb/8/8c/Trello_logo.svg/1280px-Trello_logo.svg.png",
+      logo: "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcSbQTXu4LNKkVFjXwOQVDJ3Gh5ZZnWPagV_rjZlFOcMydbSXo0X",
     },
     {
       name: "Asana",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Asana_logo.svg/1280px-Asana_logo.svg.png",
+      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2Mqm7sMiXIkLnow7m-ZBdIRAgKhNLCpZWHRqxC5S7eS2_zWKe",
     },
     {
       name: "Dropbox",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Dropbox_Icon.svg/2560px-Dropbox_Icon.svg.png",
+      logo: "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcQ26ZoyYFgwIQSf9tg_L4dSrHF4D7DDjbPEWHQcOxISMbCc_cSx",
     },
     {
       name: "Zoom",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Zoom_Logo_2022.svg/2560px-Zoom_Logo_2022.svg.png",
+      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSy1qKW_LN_RTjEThxqOPooxesb3E3gdzT2bg&s",
     },
   ];
 

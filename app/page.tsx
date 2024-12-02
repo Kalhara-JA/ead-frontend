@@ -26,47 +26,9 @@ import { PlaceOrderResponse } from "@/types/orderTypes";
 import { payOrder, placeOrder } from "@/services/orderService";
 import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
-import { postOrders } from "@/services/orderServices"; 
+import { postOrders } from "@/services/orderServices";
 import PayModal from "@/components/orders/payModal";
-
-const products = [
-  {
-    id: 1,
-    name: "Project Management Pro",
-    price: 99.99,
-    image: "https://via.placeholder.com/1000",
-  },
-  {
-    id: 2,
-    name: "Code Editor Deluxe",
-    price: 79.99,
-    image: "https://via.placeholder.com/1000",
-  },
-  {
-    id: 3,
-    name: "Database Manager Ultimate",
-    price: 149.99,
-    image: "https://via.placeholder.com/1000",
-  },
-  {
-    id: 4,
-    name: "Cloud Storage Solution",
-    price: 59.99,
-    image: "https://via.placeholder.com/1000",
-  },
-  {
-    id: 5,
-    name: "Secure VPN Service",
-    price: 39.99,
-    image: "https://via.placeholder.com/1000",
-  },
-  {
-    id: 6,
-    name: "AI-Powered Analytics",
-    price: 199.99,
-    image: "https://via.placeholder.com/1000",
-  },
-];
+import { checkInventory } from "@/services/inventoryServices";
 
 const categories = [
   { name: "Marketing Tools", icon: "📈" },
@@ -80,7 +42,7 @@ const categories = [
 const deals = [
   {
     id: 7,
-    name: "pixel_8",
+    name: "iphone_15",
     price: 79.99,
     originalPrice: 129.99,
     image: "https://via.placeholder.com/1000",
@@ -113,7 +75,6 @@ const deals = [
 ];
 
 export default function ECommerceApp() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("landing");
   const [cart, setCart] = useState<
     {
@@ -250,7 +211,7 @@ export default function ECommerceApp() {
                 alt="Hero"
                 className="relative z-10 w-full h-[auto] max-w-[700px] aspect-[4/3] object-cover object-center"
                 height="750"
-                src="/easy-transparent3.png"
+                src="/shopUs3.jpg"
                 width="700"
               />
               <div className="absolute -top-4 -left-4 w-6 h-6 bg-black dark:bg-white rounded-full" />
@@ -289,26 +250,64 @@ export default function ECommerceApp() {
     const [isPayModalOpen, setIsPayModalOpen] = useState(false); // New state for Pay modal
     const [address, setAddress] = useState("");
 
-    const [placedOrder, setPlacedOrder] = useState<PlaceOrderResponse | null>(null);
-  
-    const handleProceedToCheckout = () => {
-      setIsPaymentModalOpen(true);
+    const [placedOrder, setPlacedOrder] = useState<PlaceOrderResponse | null>(
+      null
+    );
+    const [unavailableItems, setUnavailableItems] = useState<
+      {
+        skuCode: string;
+        requestedQuantity: number;
+        availableQuantity: number;
+      }[]
+    >([]);
+    const handleProceedToCheckout = async () => {
+      setLoading(true);
+      const outOfStockItems = [];
+      try {
+        // Loop through cart items one by one and check availability
+        console.log(cart);
+        for (const item of cart) {
+          const response = await checkInventory(item.name, item.quantity);
+          console.log(response.availableQuantity);
+
+          // Check the response for availability
+          if (response.inStock == false) {
+            outOfStockItems.push({
+              skuCode: item.name,
+              requestedQuantity: item.quantity,
+              availableQuantity: response.availableQuantity || 0,
+            });
+          }
+        }
+        console.log(outOfStockItems);
+        if (outOfStockItems.length > 0) {
+          setUnavailableItems(outOfStockItems);
+          alert(
+            `The following items are out of stock:\n${outOfStockItems
+              .map(
+                (item) =>
+                  `${item.skuCode} (Requested: ${item.requestedQuantity}, Available: ${item.availableQuantity})`
+              )
+              .join("\n")}`
+          );
+        } else {
+          alert("All items are in stock. Proceeding to checkout...");
+          setIsPaymentModalOpen(true);
+        }
+      } catch (error) {
+        console.error("Error checking stock availability:", error);
+        alert("An error occurred while checking stock availability.");
+      } finally {
+        setLoading(false);
+      }
     };
 
     const defaultAddress = `${session?.user?.address?.street_address}, ${session?.user?.address?.locality}, ${session?.user?.address?.region}, ${session?.user?.address?.postal_code}, ${session?.user?.address?.country}`;
-
-  
     const handleMakePayment = async () => {
-
-      
-     
-  
-      
-  
       const fullName = session?.user?.name || "";
       const [firstName, lastName] = fullName.split(" ");
       const email = session?.user?.email || "";
-  
+
       try {
         const items = cart.map((item) => ({
           skuCode: item.name,
@@ -325,7 +324,7 @@ export default function ECommerceApp() {
             lastName: lastName,
           },
         };
-  
+
         const data = await placeOrder(order);
         setPlacedOrder(data);
         toast.success("Order placed successfully!");
@@ -343,14 +342,14 @@ export default function ECommerceApp() {
         if (!orderId) {
           throw new Error("Invalid order ID");
         }
-       const data= await payOrder(orderId);
+        const data = await payOrder(orderId);
         toast.success("Payment processed successfully!");
         setIsPayModalOpen(false);
-      } catch (error:any) {
+      } catch (error: any) {
         toast.error(error);
       }
-    }
-  
+    };
+
     return (
       <>
         {/* Cart Section */}
@@ -359,7 +358,10 @@ export default function ECommerceApp() {
             <Toaster />
             <div
               className="fixed inset-0 bg-black bg-opacity-50 z-40"
-              onClick={() => setIsCartOpen(false)}
+              onClick={() => {
+                setIsCartOpen(false);
+                setUnavailableItems([]);
+              }}
             />
             <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-background shadow-lg p-6 overflow-y-auto z-50">
               <div className="flex justify-between items-center mb-6">
@@ -367,7 +369,10 @@ export default function ECommerceApp() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setIsCartOpen(false)}
+                  onClick={() => {
+                    setIsCartOpen(false);
+                    setUnavailableItems([]);
+                  }}
                 >
                   <XIcon className="h-6 w-6" />
                 </Button>
@@ -398,7 +403,9 @@ export default function ECommerceApp() {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity - 1)
+                          }
                         >
                           <MinusIcon className="h-4 w-4" />
                         </Button>
@@ -406,7 +413,9 @@ export default function ECommerceApp() {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity + 1)
+                          }
                         >
                           <PlusIcon className="h-4 w-4" />
                         </Button>
@@ -424,8 +433,27 @@ export default function ECommerceApp() {
                   <div className="mt-6 border-t pt-4">
                     <div className="flex justify-between items-center mb-4">
                       <span className="font-semibold">Total:</span>
-                      <span className="font-bold">${totalPrice.toFixed(2)}</span>
+                      <span className="font-bold">
+                        ${totalPrice.toFixed(2)}
+                      </span>
                     </div>
+                    {unavailableItems.length > 0 && (
+                      <div className="mb-4">
+                        <h3 className="text-red-500 font-semibold mb-2">
+                          Out of Stock Items
+                        </h3>
+                        <ul>
+                          {unavailableItems.map((item) => (
+                            <li key={item.skuCode}>
+                              {item.skuCode} - (Requested:{" "}
+                              {item.requestedQuantity}, Available:{" "}
+                              {item.availableQuantity})
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
                     <Button
                       className="w-full"
                       onClick={handleProceedToCheckout}
@@ -438,7 +466,7 @@ export default function ECommerceApp() {
             </div>
           </>
         )}
-  
+
         {/* Payment Modal */}
         {isPaymentModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
@@ -472,7 +500,7 @@ export default function ECommerceApp() {
               <p className="mb-4 font-semibold">
                 Total Amount: ${totalPrice.toFixed(2)}
               </p>
-  
+
               <div className="flex items-center mb-4">
                 <input
                   type="checkbox"
@@ -482,7 +510,7 @@ export default function ECommerceApp() {
                 />
                 <label className="font-medium">Use default address</label>
               </div>
-  
+
               {useDefaultAddress ? (
                 <div className="p-4 border rounded-lg mb-4">
                   <h3 className="font-semibold">Default Address</h3>
@@ -513,17 +541,19 @@ export default function ECommerceApp() {
             </div>
           </div>
         )}
-  
-           {/* Pay Modal */}
-           {isPayModalOpen && (<PayModal orderId={placedOrder?.orderId} total={placedOrder?.total} pay={pay} setIsPayModalOpen={setIsPayModalOpen} />
 
-        
+        {/* Pay Modal */}
+        {isPayModalOpen && (
+          <PayModal
+            orderId={placedOrder?.orderId}
+            total={placedOrder?.total}
+            pay={pay}
+            setIsPayModalOpen={setIsPayModalOpen}
+          />
         )}
       </>
     );
   };
-  
-  
 
   return (
     <div className="flex flex-col min-h-screen">
