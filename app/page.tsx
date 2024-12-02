@@ -283,9 +283,12 @@ export default function ECommerceApp() {
 
   const renderCart = () => {
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-    const [isPayModalOpen, setIsPayModalOpen] = useState(false);
-    const [address, setAddress] = useState("");
+
     const [useDefaultAddress, setUseDefaultAddress] = useState(true); // State to switch between default and new address
+
+    const [isPayModalOpen, setIsPayModalOpen] = useState(false); // New state for Pay modal
+    const [address, setAddress] = useState("");
+
     const [placedOrder, setPlacedOrder] = useState<PlaceOrderResponse | null>(null);
   
     const handleProceedToCheckout = () => {

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,36 +14,9 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { Toaster, toast } from "react-hot-toast";
 import { registerUser } from "@/services/userService";
-
-type AlertType = "error" | "success" | null;
-
-interface AlertProps {
-  type: AlertType;
-  title: string;
-  message: string;
-}
-
-const CustomAlert: React.FC<AlertProps> = ({ type, title, message }) => {
-  if (!type) return null;
-
-  return (
-    <Alert
-      variant={type === "error" ? "destructive" : "default"}
-      className="mb-4"
-    >
-      {type === "error" ? (
-        <AlertCircle className="h-4 w-4" />
-      ) : (
-        <CheckCircle className="h-4 w-4" />
-      )}
-      <AlertTitle>{title}</AlertTitle>
-      <AlertDescription>{message}</AlertDescription>
-    </Alert>
-  );
-};
+import { CloudinaryUploadWidget } from "@/components/CloudinaryUploadWidget";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -62,27 +36,29 @@ export default function RegisterPage() {
 
   const [formData, setFormData] = useState(initialFormState);
   const [isLoading, setIsLoading] = useState(false);
-  const [alert, setAlert] = useState<AlertProps>({
-    type: null,
-    title: "",
-    message: "",
-  });
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleImageUpload = (error: any, result: any) => {
+    if (!error && result && result.event === "success") {
+      const uploadedImageUrl = result.info.secure_url;
+      setFormData({ ...formData, image: uploadedImageUrl });
+      setImagePreview(uploadedImageUrl);
+      toast.success("Image uploaded successfully");
+    } else if (error) {
+      toast.error("Image upload failed");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    setAlert({ type: null, title: "", message: "" });
 
     if (formData.password !== formData.confirmPassword) {
-      setAlert({
-        type: "error",
-        title: "Error",
-        message: "Passwords do not match",
-      });
+      toast.error("Passwords do not match");
       setIsLoading(false);
       return;
     }
@@ -101,89 +77,129 @@ export default function RegisterPage() {
         country: formData.country,
       };
 
-      // Call the service to register the user
       await registerUser(userData);
 
-      setAlert({
-        type: "success",
-        title: "Success",
-        message:
-          "Registration successful. Redirecting to the sign-in page...",
-      });
+      toast.success(
+        "Registration successful. Redirecting to the sign-in page..."
+      );
 
-      // Clear the form
       setFormData(initialFormState);
+      setImagePreview(null);
 
-      // Redirect to sign-in page
       setTimeout(() => {
         router.push("/auth/signin");
-      }, 2000); // Delay for user to read the success message
+      }, 2000);
     } catch (error) {
-      setAlert({
-        type: "error",
-        title: "Error",
-        message: error instanceof Error ? error.message : "Registration failed",
-      });
+      toast.error(
+        error instanceof Error ? error.message : "Registration failed"
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div>
-      <div className="flex justify-center items-center min-h-screen bg-gray-100">
-        <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <Toaster toastOptions={{ duration: 4000 }} />
+      <Card className="w-full max-w-6xl grid md:grid-cols-2 overflow-hidden">
+        <div className="hidden md:block relative">
+          {/* <Image
+            src="/placeholder.svg?height=1080&width=1080"
+            alt="Registration background"
+            layout="fill"
+            objectFit="cover"
+          /> */}
+          <div className="absolute inset-0 bg-primary/60 flex items-center justify-center">
+            <div className="text-white text-center p-8">
+              <h1 className="text-4xl font-bold mb-4">Welcome</h1>
+              <p className="text-xl">
+                Join our community and start your journey today!
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="p-8">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">
-              Register
+            <CardTitle className="text-3xl font-bold text-center mb-6">
+              Create an Account
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <CustomAlert {...alert} />
             <form onSubmit={handleSubmit} className="space-y-4">
-              {[
-                { id: "email", label: "Email", type: "email" },
-                { id: "password", label: "Password", type: "password" },
-                { id: "confirmPassword", label: "Confirm Password", type: "password" },
-                { id: "firstName", label: "First Name", type: "text" },
-                { id: "lastName", label: "Last Name", type: "text" },
-                { id: "image", label: "Image URL", type: "text" },
-                { id: "street", label: "Street", type: "text" },
-                { id: "city", label: "City or Locality", type: "text" },
-                { id: "state", label: "State, Province, or Region", type: "text" },
-                { id: "zip", label: "Zip or Postal Code", type: "text" },
-                { id: "country", label: "Country", type: "text" },
-              ].map(({ id, label, type }) => (
-                <div key={id} className="space-y-2">
-                  <Label htmlFor={id}>{label}</Label>
-                  <Input
-                    id={id}
-                    name={id}
-                    type={type}
-                    required
-                    value={formData[id as keyof typeof formData]}
-                    onChange={handleChange}
-                  />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { id: "firstName", label: "First Name", type: "text" },
+                  { id: "lastName", label: "Last Name", type: "text" },
+                  { id: "email", label: "Email", type: "email" },
+                  { id: "password", label: "Password", type: "password" },
+                  {
+                    id: "confirmPassword",
+                    label: "Confirm Password",
+                    type: "password",
+                  },
+                  { id: "street", label: "Street Address", type: "text" },
+                  { id: "city", label: "City", type: "text" },
+                  { id: "state", label: "State/Province", type: "text" },
+                  { id: "zip", label: "Zip/Postal Code", type: "text" },
+                  { id: "country", label: "Country", type: "text" },
+                ].map(({ id, label, type }) => (
+                  <div key={id} className="space-y-2">
+                    <Label htmlFor={id} className="text-sm font-medium">
+                      {label}
+                    </Label>
+                    <Input
+                      id={id}
+                      name={id}
+                      type={type}
+                      required
+                      value={formData[id as keyof typeof formData]}
+                      onChange={handleChange}
+                      className="w-full"
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="image" className="text-sm font-medium">
+                  Profile Image
+                </Label>
+                <div className="flex items-center space-x-4">
+                  {imagePreview && (
+                    <Image
+                      src={imagePreview}
+                      alt="Profile preview"
+                      width={100}
+                      height={100}
+                      className="rounded-full object-cover"
+                    />
+                  )}
+                  <CloudinaryUploadWidget onUpload={handleImageUpload}>
+                    Upload Image
+                  </CloudinaryUploadWidget>
                 </div>
-              ))}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Registering..." : "Register"}
+              </div>
+              <Button
+                type="submit"
+                className="w-full mt-6"
+                disabled={isLoading}
+              >
+                {isLoading ? "Registering..." : "Create Account"}
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex justify-center">
+          <CardFooter className="flex justify-center mt-6">
             <p className="text-sm text-muted-foreground">
               Already have an account?{" "}
               <Link
                 href="/auth/signin"
-                className="text-primary hover:underline"
+                className="text-primary hover:underline font-medium"
               >
                 Sign in
               </Link>
             </p>
           </CardFooter>
-        </Card>
-      </div>
+        </div>
+      </Card>
     </div>
   );
 }
