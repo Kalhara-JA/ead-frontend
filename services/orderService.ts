@@ -24,7 +24,7 @@ export const getAllOrder = async () => {
           return response.data; // Axios stores the response data in `data`
         } catch (error:any) {
           console.error("Error placing order:", error);
-          if (error.response.data.exceptions) throw error.response.data.exceptions;
+          if (typeof error.response.data.exceptions ==='string') throw error.response.data.exceptions;
           throw Error("Order placing failed").message;	
         }
       };
@@ -36,8 +36,20 @@ export const getAllOrder = async () => {
           return response.data; // Axios stores the response data in `data`
         } catch (error:any) {
           console.error("Error placing order:", error);
-          if (error.response.data) throw error.response.data;
-          throw Error("payment failed").message;	
+          if (typeof error.response.data === 'string') throw error.response.data;
+          throw Error("Payment failed").message;	
+        }
+      };
+
+      export const cancelOrder = async (orderid:number) => {
+        try {
+          const response = await axiosInstance.put(`/v1/orders/${orderid}/cancel`);
+          console.log(response.data);
+          return response.data; // Axios stores the response data in `data`
+        } catch (error:any) {
+          //console.error("Error placing order:", error);
+          if (typeof error.response.data === 'string') throw error.response.data;
+          throw Error("Order cancel failed").message;	
         }
       };
 

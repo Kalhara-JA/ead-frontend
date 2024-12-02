@@ -5,8 +5,10 @@ import { CircleArrowLeft, Truck, CheckCircle, Loader, AlertTriangle, LoaderCircl
 import { Button } from "@/components/ui/button";
 //import "./OrderDetailsPage.css"; // Import custom CSS for scroll styling
 import toast, { Toaster } from 'react-hot-toast';
-import {fetchOrderByOrderNumber } from "@/services/orderService";
+import {cancelOrder, fetchOrderByOrderNumber, payOrder } from "@/services/orderService";
 import Header from "@/components/site-header";
+import PayModal from "@/components/orders/payModal";
+import CancelOrderModel from "@/components/orders/cancelOrder";
 
 interface Order {
   id: number;
@@ -28,21 +30,48 @@ interface OrderItem {
 function OrderDetailsPage({ params }: { params: { orderNumber: string } }) {
   const router = useRouter();
   const [order, setOrder] = useState<Order>();
-  const [isShipModalOpen, setIsshipModalOpen] = useState(false);
-  const [isDeliverModalOpen, setIsDeliverModalOpen] = useState(false);
-  const [pendingStatus, setPendingStatus] = useState<"DELIVERED" | "PENDING" | "SHIPPED" | null>(null);
+  const [isPayModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isCancelModelOpen,setCancelModelOpen] = useState(false);
  
 
   const loadOrderData = async () => {
     try {
-      console.log("Fetching order data for order number:", params.orderNumber);
       const data = await fetchOrderByOrderNumber(params.orderNumber);
-      console.log("Fetched order data: ", data);
       setOrder(data);
     } catch (err) {
       console.error("Error fetching order data:", err);
     }
   };
+
+  const pay = async (orderId?: number) => {
+    try {
+      if (!order?.id) {
+        throw new Error("Invalid order ID");
+      }
+     const data= await payOrder(order?.id);
+      toast.success("Payment processed successfully!");
+      loadOrderData();
+      setIsPaymentModalOpen(false);
+
+    } catch (error:any) {
+      toast.error(error);
+    }
+  }
+
+  const cancel = async (orderId?: number) => {
+    try {
+      if (!order?.id) {
+        throw new Error("Invalid order ID");
+      }
+     const data= await cancelOrder(order?.id);
+      toast.success("Payment processed successfully!");
+      loadOrderData();
+      setCancelModelOpen(false);
+
+    } catch (error:any) {
+      toast.error(error);
+    }
+  }
 
   // const deliverOrder = async (id?: number) => {
   //   try {
@@ -78,19 +107,6 @@ function OrderDetailsPage({ params }: { params: { orderNumber: string } }) {
     router.back();
   };
 
- 
-
-  const openConfirmationModal = (status: "DELIVERED" | "PENDING" | "SHIPPED") => {
-    if(status=="DELIVERED")
-      setIsDeliverModalOpen(true);
-    else if(status=="SHIPPED")
-      setIsshipModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsDeliverModalOpen(false);
-    setIsshipModalOpen(false);
-  };
 
   return (
     <>
@@ -102,7 +118,12 @@ function OrderDetailsPage({ params }: { params: { orderNumber: string } }) {
         setIsCartOpen={() => {}}
       />
     <div className="order-details-page h-full w-full p-8 bg-white rounded-lg shadow-lg flex flex-col overflow-hidden">
-      <Toaster />
+      <Toaster  
+      toastOptions={{
+        style: {
+          fontWeight: 'bold',
+        }
+          }}/>
       {/* Header Section */}
      
       <br></br>
@@ -155,8 +176,10 @@ function OrderDetailsPage({ params }: { params: { orderNumber: string } }) {
 <br/>
 <div className="flex space-x-2 ">
 
-  {order?.paymentStatus==="UNPAID"&&<Button variant="default">Make Payment</Button>}
-  {order?.paymentStatus==="UNPAID"&&<Button variant="destructive">Cancel Order</Button>}
+  {order?.paymentStatus==="UNPAID"&&<Button variant="default" onClick={()=>setIsPaymentModalOpen(true)}>Make Payment</Button>}
+  {order?.paymentStatus==="UNPAID"&&<Button variant="destructive" onClick={()=>setCancelModelOpen(true)}>Cancel Order</Button>}
+  {isPayModalOpen&&<PayModal setIsPayModalOpen={setIsPaymentModalOpen}  pay={pay}   orderId={order?.id} total={order?.total} />}
+  {isCancelModelOpen&&<CancelOrderModel isOpen={isCancelModelOpen} onClose={()=>setCancelModelOpen(false)} onConfirm={cancel}/>}
 </div>
 <br></br>
 
