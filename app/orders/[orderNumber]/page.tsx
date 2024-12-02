@@ -153,7 +153,12 @@ function OrderDetailsPage({ params }: { params: { orderNumber: string } }) {
         </div>
 
 <br/>
-      
+<div className="flex space-x-2 ">
+
+  {order?.paymentStatus==="UNPAID"&&<Button variant="default">Make Payment</Button>}
+  {order?.paymentStatus==="UNPAID"&&<Button variant="destructive">Cancel Order</Button>}
+</div>
+<br></br>
 
       <span className="text-lg font-semibold text-gray-800 mb-4">Order Status</span>
       {order?.deliveryStatus === "PENDING" && (
