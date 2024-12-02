@@ -71,7 +71,7 @@ const Header = ({ setCurrentPage, cart, setCart, isCartOpen, setIsCartOpen }) =>
             onClick={() => setCurrentPage("landing")}
           >
             <ShoppingCartIcon className="h-6 w-6" />
-            <span className="hidden font-bold sm:inline-block">Easy UI</span>
+            <span className="hidden font-bold sm:inline-block">Shop@Us</span>
           </a>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             <a

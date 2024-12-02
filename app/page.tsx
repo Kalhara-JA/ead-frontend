@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  ShoppingCartIcon,
-  MenuIcon,
   XIcon,
   MinusIcon,
   PlusIcon,
@@ -24,48 +22,7 @@ import { getAllProducts } from "@/services/productService";
 import { useSession } from "next-auth/react";
 import { PlaceOrderResponse } from "@/types/orderTypes";
 import { payOrder, placeOrder } from "@/services/orderService";
-import { Toaster } from "react-hot-toast";
-import axios from "axios";
-import { postOrders } from "@/services/orderServices"; 
-
-const products = [
-  {
-    id: 1,
-    name: "Project Management Pro",
-    price: 99.99,
-    image: "https://via.placeholder.com/1000",
-  },
-  {
-    id: 2,
-    name: "Code Editor Deluxe",
-    price: 79.99,
-    image: "https://via.placeholder.com/1000",
-  },
-  {
-    id: 3,
-    name: "Database Manager Ultimate",
-    price: 149.99,
-    image: "https://via.placeholder.com/1000",
-  },
-  {
-    id: 4,
-    name: "Cloud Storage Solution",
-    price: 59.99,
-    image: "https://via.placeholder.com/1000",
-  },
-  {
-    id: 5,
-    name: "Secure VPN Service",
-    price: 39.99,
-    image: "https://via.placeholder.com/1000",
-  },
-  {
-    id: 6,
-    name: "AI-Powered Analytics",
-    price: 199.99,
-    image: "https://via.placeholder.com/1000",
-  },
-];
+import { checkInventory } from "@/services/inventoryServices";
 
 const categories = [
   { name: "Marketing Tools", icon: "📈" },
@@ -79,7 +36,7 @@ const categories = [
 const deals = [
   {
     id: 7,
-    name: "AI Assistant Pro",
+    name: "iphone_15",
     price: 79.99,
     originalPrice: 129.99,
     image: "https://via.placeholder.com/1000",
@@ -87,7 +44,7 @@ const deals = [
   },
   {
     id: 8,
-    name: "Cloud Sync Ultimate",
+    name: "pixel_8",
     price: 49.99,
     originalPrice: 89.99,
     image: "https://via.placeholder.com/1000",
@@ -95,7 +52,7 @@ const deals = [
   },
   {
     id: 9,
-    name: "Marketing Automation Suite",
+    name: "galaxy_24",
     price: 159.99,
     originalPrice: 249.99,
     image: "https://via.placeholder.com/1000",
@@ -103,7 +60,7 @@ const deals = [
   },
   {
     id: 10,
-    name: "Collaboration Platform",
+    name: "oneplus_12",
     price: 29.99,
     originalPrice: 59.99,
     image: "https://via.placeholder.com/1000",
@@ -112,7 +69,6 @@ const deals = [
 ];
 
 export default function ECommerceApp() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("landing");
   const [cart, setCart] = useState<
     {
@@ -157,7 +113,6 @@ export default function ECommerceApp() {
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
-
   // @ts-ignore
   const addToCart = (product) => {
     // @ts-ignore
@@ -280,34 +235,79 @@ export default function ECommerceApp() {
   );
   const { data: session } = useSession();
   const renderCart = () => {
-
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isPayModalOpen, setIsPayModalOpen] = useState(false); // New state for Pay modal
-    const [address, setAddress] = useState("");r
-    const [placedOrder, setPlacedOrder] = useState<PlaceOrderResponse | null>(null);
-  
+    const [address, setAddress] = useState("");
+    const [placedOrder, setPlacedOrder] = useState<PlaceOrderResponse | null>(
+      null
+    );
+    const [unavailableItems, setUnavailableItems] = useState<
+      {
+        skuCode: string;
+        requestedQuantity: number;
+        availableQuantity: number;
+      }[]
+    >([]);
+    console.log(cart);
+    const handleProceedToCheckout = async () => {
+      setLoading(true);
+      const outOfStockItems = [];
+      try {
+        // Loop through cart items one by one and check availability
+        console.log(cart);
+        for (const item of cart) {
+          const response = await checkInventory(item.name, item.quantity);
+          console.log(response.availableQuantity);
 
-
-    const handleProceedToCheckout = () => {
-      setIsPaymentModalOpen(true);
+          // Check the response for availability
+          if (response.inStock == false) {
+            outOfStockItems.push({
+              skuCode: item.name,
+              requestedQuantity: item.quantity,
+              availableQuantity: response.availableQuantity || 0,
+            });
+          }
+        }
+        console.log(outOfStockItems);
+        if (outOfStockItems.length > 0) {
+          setUnavailableItems(outOfStockItems);
+          alert(
+            `The following items are out of stock:\n${outOfStockItems
+              .map(
+                (item) =>
+                  `${item.skuCode} (Requested: ${item.requestedQuantity}, Available: ${item.availableQuantity})`
+              )
+              .join("\n")}`
+          );
+        } else {
+          alert("All items are in stock. Proceeding to checkout...");
+          setIsPaymentModalOpen(true);
+        }
+      } catch (error) {
+        console.error("Error checking stock availability:", error);
+        alert("An error occurred while checking stock availability.");
+      } finally {
+        setLoading(false);
+      }
     };
+
     const handleMakePayment = async () => {
       if (address.trim() === "") {
         alert("Please enter your address before proceeding.");
         return;
       }
-      
+
       const fullName = session?.user?.name || ""; // Fallback to an empty string if the name is undefined
       const [firstName, lastName] = fullName.split(" ");
-      const email = session?.user?.email || ""; 
-      
+      const email = session?.user?.email || "";
+
       try {
         const items = cart.map((item) => {
           return {
-              skuCode: item.name, // Set dynamically based on the actual product ID
-              quantity: item.quantity // Set dynamically based on the actual quantity
+            skuCode: item.name, // Set dynamically based on the actual product ID
+            quantity: item.quantity, // Set dynamically based on the actual quantity
           };
-      });
+        });
         const order = {
           items: items,
           total: totalPrice, // Set this based on the total amount of the order
@@ -315,22 +315,22 @@ export default function ECommerceApp() {
           date: "2001-05-25", // Format the date as 'YYYY-MM-DD'
           userDetails: {
             email: email, // Replace with the actual user's email
-            firstName:firstName, // Replace with the actual user's first name
-            lastName: lastName // Replace with the actual user's last name
-          }
+            firstName: firstName, // Replace with the actual user's first name
+            lastName: lastName, // Replace with the actual user's last name
+          },
         };
-        
-        const data= await placeOrder(order);
+
+        const data = await placeOrder(order);
         setPlacedOrder(data);
         alert("Order placed successfully!");
         setCart([]);
         setIsPayModalOpen(true);
         setIsPaymentModalOpen(false);
-      }catch (error) {
-          alert(error);
-        }
+      } catch (error) {
+        alert(error);
+      }
       //setIsPaymentModalOpen(false);
-       // Open Pay modal
+      // Open Pay modal
     };
 
     const pay = async (orderId?: number) => {
@@ -338,14 +338,13 @@ export default function ECommerceApp() {
         if (!orderId) {
           throw new Error("Invalid order ID");
         }
-       const data= await payOrder(orderId);
+        const data = await payOrder(orderId);
         alert("Payment processed successfully!");
         setIsPayModalOpen(false);
       } catch (error) {
         alert(error);
       }
-    }
-  
+    };
 
     return (
       <>
@@ -427,6 +426,22 @@ export default function ECommerceApp() {
                         ${totalPrice.toFixed(2)}
                       </span>
                     </div>
+                   {unavailableItems.length > 0 && (
+                    <div className="mb-4">
+                      <h3 className="text-red-500 font-semibold mb-2">
+                        Out of Stock Items
+                      </h3>
+                      <ul>
+                        {unavailableItems.map((item) => (
+                          <li key={item.skuCode}>
+                            {item.skuCode} - (Requested: {item.requestedQuantity},
+                            Available: {item.availableQuantity})
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )
+                          }
                     <Button
                       className="w-full"
                       onClick={handleProceedToCheckout}
@@ -444,7 +459,6 @@ export default function ECommerceApp() {
         {isPaymentModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
             <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-
               <h2 className="text-2xl font-bold mb-4">Wish Order Details</h2>
               <p>
                 <>
@@ -494,72 +508,81 @@ export default function ECommerceApp() {
                 </Button>
 
                 <Button onClick={handleMakePayment}>Add to Wish List</Button>
-
               </div>
             </div>
           </div>
         )}
-  
+
         {/* Pay Modal */}
         {isPayModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-  <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-    <h2 className="text-2xl font-bold mb-4">Pay</h2>
-    {/* Dummy Payment Gateway */}
-    <form onSubmit={(e) => { 
-      e.preventDefault(); 
-      alert("Payment processed successfully!");
-    }}>
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
-        <input
-          type="text"
-          placeholder="1234 5678 9012 3456"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-        />
-      </div>
-      <div className="flex justify-between mb-4">
-        <div className="w-1/2 pr-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-          <input
-            type="text"
-            placeholder="MM/YY"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-        <div className="w-1/2 pl-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-          <input
-            type="text"
-            placeholder="123"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-      </div>
-      {/* Display Payment Amount */}
-      <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-4 flex justify-between items-center">
-        <span className="text-lg font-semibold text-gray-800">Total Amount</span>
-        <span className="text-xl font-bold text-green-600">${placedOrder?.total}</span>
-      </div>
-      <div className="flex justify-end space-x-4 mt-4">
-        <Button onClick={()=>pay(placedOrder?.orderId)}>
-          Pay Now
-        </Button>
-        <Button
-          variant="secondary" 
-          onClick={() => setIsPayModalOpen(false)} 
-        >
-          Pay Later
-        </Button>
-      </div>
-    </form>
-  </div>
-</div>
-
-        
+            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+              <h2 className="text-2xl font-bold mb-4">Pay</h2>
+              {/* Dummy Payment Gateway */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  alert("Payment processed successfully!");
+                }}
+              >
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Card Number
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="1234 5678 9012 3456"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div className="flex justify-between mb-4">
+                  <div className="w-1/2 pr-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Expiry Date
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="MM/YY"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div className="w-1/2 pl-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      CVV
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="123"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                </div>
+                {/* Display Payment Amount */}
+                <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-4 flex justify-between items-center">
+                  <span className="text-lg font-semibold text-gray-800">
+                    Total Amount
+                  </span>
+                  <span className="text-xl font-bold text-green-600">
+                    ${placedOrder?.total}
+                  </span>
+                </div>
+                <div className="flex justify-end space-x-4 mt-4">
+                  <Button onClick={() => pay(placedOrder?.orderId)}>
+                    Pay Now
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setIsPayModalOpen(false)}
+                  >
+                    Pay Later
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
       </>
     );

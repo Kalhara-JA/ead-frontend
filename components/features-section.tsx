@@ -23,7 +23,7 @@ const features = [
     ),
     title: "Reliable Customer Service",
     description:
-      "Our dedicated support team is here to ensure your questions are answered and your needs are met around the clock.",
+      "Our dedicated team is here to ensure your questions are answered and your needs are met around the clock.",
   },
   {
     icon: (

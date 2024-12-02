@@ -35,7 +35,7 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
   addToCart,
 }) => {
   const handleAddToCart = () => {
-    if (quantity > 0) {
+        if (quantity > 0) {
       addToCart(product);
       toast.success(`${product.name} added to cart!`, {
         icon: "🛒",
