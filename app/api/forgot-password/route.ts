@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const body = await req.json(); // Parse the JSON body
     const { email } = body;
 
-    // console.log("Email:", email);
+    console.log("Email:", email);
 
     if (!email) {
       return new Response(JSON.stringify({ error: "Email is required" }), {
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_APP_URL
     }/auth/reset-password?token=${encodeURIComponent(tokenPackage)}`;
 
-    // console.log("Reset URL:", resetUrl);
+    console.log("Reset URL:", resetUrl);
     // Send the email with NodeMailer
     const transporter = nodemailer.createTransport({
       host: "sandbox.smtp.mailtrap.io",
