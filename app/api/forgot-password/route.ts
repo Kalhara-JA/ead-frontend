@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const body = await req.json(); // Parse the JSON body
     const { email } = body;
 
-    console.log("Email:", email);
+    // console.log("Email:", email);
 
     if (!email) {
       return new Response(JSON.stringify({ error: "Email is required" }), {
@@ -35,10 +35,13 @@ export async function POST(req: Request) {
     const keycloakResponse = await axios.post(
       keycloakTokenUrl,
       new URLSearchParams({
-        grant_type: "client_credentials",
+        grant_type: "password",
         client_id: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "",
         client_secret: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_SECRET || "",
-      }).toString(),
+        username: process.env.NEXT_PUBLIC_KEYCLOAK_ADMIN_USERNAME || "",
+        password: process.env.NEXT_PUBLIC_KEYCLOAK_ADMIN_PASSWORD || "",
+        scope: "openid roles",
+      }),
       {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -48,25 +51,35 @@ export async function POST(req: Request) {
 
     const keycloakToken = keycloakResponse.data.access_token;
 
-    // Encrypt the token
+    // Encrypt email and token using AES
     const algorithm = "aes-256-cbc";
-    const encryptionKey = crypto.randomBytes(32); // Generate a 32-byte key
-    const iv = crypto.randomBytes(16); // Initialization vector
+    const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY!, "hex");
 
+    // Ensure the encryption key is valid
+    if (encryptionKey.length !== 32) {
+      throw new Error(
+        "Invalid ENCRYPTION_KEY length. Must be 32 bytes (64 hex characters)."
+      );
+    }
+
+    const iv = crypto.randomBytes(16); // IV should be 16 bytes for AES
     const cipher = crypto.createCipheriv(algorithm, encryptionKey, iv);
-    let encryptedToken = cipher.update(keycloakToken, "utf8", "hex");
-    encryptedToken += cipher.final("hex");
 
-    const tokenPackage = `${encryptedToken}:${iv.toString(
+    let encryptedPayload = cipher.update(
+      JSON.stringify({ email, keycloakToken }),
+      "utf8",
       "hex"
-    )}:${encryptionKey.toString("hex")}`;
+    );
+    encryptedPayload += cipher.final("hex");
 
-    // Generate the reset link
+    const tokenPackage = `${encryptedPayload}:${iv.toString("hex")}`;
+
+    // Generate reset link
     const resetUrl = `${
       process.env.NEXT_PUBLIC_APP_URL
     }/auth/reset-password?token=${encodeURIComponent(tokenPackage)}`;
 
-    console.log("Reset URL:", resetUrl);
+    // console.log("Reset URL:", resetUrl);
     // Send the email with NodeMailer
     const transporter = nodemailer.createTransport({
       host: "sandbox.smtp.mailtrap.io",
