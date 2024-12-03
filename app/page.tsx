@@ -24,48 +24,11 @@ import { getAllProducts } from "@/services/productService";
 import { useSession } from "next-auth/react";
 import { PlaceOrderResponse } from "@/types/orderTypes";
 import { payOrder, placeOrder } from "@/services/orderService";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
-import { postOrders } from "@/services/orderServices"; 
-
-const products = [
-  {
-    id: 1,
-    name: "Project Management Pro",
-    price: 99.99,
-    image: "https://via.placeholder.com/1000",
-  },
-  {
-    id: 2,
-    name: "Code Editor Deluxe",
-    price: 79.99,
-    image: "https://via.placeholder.com/1000",
-  },
-  {
-    id: 3,
-    name: "Database Manager Ultimate",
-    price: 149.99,
-    image: "https://via.placeholder.com/1000",
-  },
-  {
-    id: 4,
-    name: "Cloud Storage Solution",
-    price: 59.99,
-    image: "https://via.placeholder.com/1000",
-  },
-  {
-    id: 5,
-    name: "Secure VPN Service",
-    price: 39.99,
-    image: "https://via.placeholder.com/1000",
-  },
-  {
-    id: 6,
-    name: "AI-Powered Analytics",
-    price: 199.99,
-    image: "https://via.placeholder.com/1000",
-  },
-];
+import { postOrders } from "@/services/orderServices";
+import PayModal from "@/components/orders/payModal";
+import { checkInventory } from "@/services/inventoryServices";
 
 const categories = [
   { name: "Marketing Tools", icon: "📈" },
@@ -79,7 +42,7 @@ const categories = [
 const deals = [
   {
     id: 7,
-    name: "AI Assistant Pro",
+    name: "iphone_15",
     price: 79.99,
     originalPrice: 129.99,
     image: "https://via.placeholder.com/1000",
@@ -112,7 +75,6 @@ const deals = [
 ];
 
 export default function ECommerceApp() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("landing");
   const [cart, setCart] = useState<
     {
@@ -249,7 +211,7 @@ export default function ECommerceApp() {
                 alt="Hero"
                 className="relative z-10 w-full h-[auto] max-w-[700px] aspect-[4/3] object-cover object-center"
                 height="750"
-                src="/easy-transparent3.png"
+                src="/shopUs3.jpg"
                 width="700"
               />
               <div className="absolute -top-4 -left-4 w-6 h-6 bg-black dark:bg-white rounded-full" />
@@ -279,58 +241,104 @@ export default function ECommerceApp() {
     </main>
   );
   const { data: session } = useSession();
-  const renderCart = () => {
 
+  const renderCart = () => {
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isPayModalOpen, setIsPayModalOpen] = useState(false); // New state for Pay modal
     const [address, setAddress] = useState("");
     const [placedOrder, setPlacedOrder] = useState<PlaceOrderResponse | null>(null);
-  
+ 
 
+    const [useDefaultAddress, setUseDefaultAddress] = useState(true); // State to switch between default and new address
 
-    const handleProceedToCheckout = () => {
-      setIsPaymentModalOpen(true);
-    };
-    const handleMakePayment = async () => {
-      if (address.trim() === "") {
-        alert("Please enter your address before proceeding.");
-        return;
-      }
-      
-      const fullName = session?.user?.name || ""; // Fallback to an empty string if the name is undefined
-      const [firstName, lastName] = fullName.split(" ");
-      const email = session?.user?.email || ""; 
-      
+    const [isPayModalOpen, setIsPayModalOpen] = useState(false); // New state for Pay modal
+    const [address, setAddress] = useState("");
+
+    const [placedOrder, setPlacedOrder] = useState<PlaceOrderResponse | null>(
+      null
+    );
+    const [unavailableItems, setUnavailableItems] = useState<
+      {
+        skuCode: string;
+        requestedQuantity: number;
+        availableQuantity: number;
+      }[]
+    >([]);
+    const handleProceedToCheckout = async () => {
+      setLoading(true);
+      const outOfStockItems = [];
       try {
-        const items = cart.map((item) => {
-          return {
-              skuCode: item.name, // Set dynamically based on the actual product ID
-              quantity: item.quantity // Set dynamically based on the actual quantity
-          };
-      });
+        // Loop through cart items one by one and check availability
+        console.log(cart);
+        for (const item of cart) {
+          const response = await checkInventory(item.name, item.quantity);
+          console.log(response.availableQuantity);
+
+          // Check the response for availability
+          if (response.inStock == false) {
+            outOfStockItems.push({
+              skuCode: item.name,
+              requestedQuantity: item.quantity,
+              availableQuantity: response.availableQuantity || 0,
+            });
+          }
+        }
+        console.log(outOfStockItems);
+        if (outOfStockItems.length > 0) {
+          setUnavailableItems(outOfStockItems);
+          alert(
+            `The following items are out of stock:\n${outOfStockItems
+              .map(
+                (item) =>
+                  `${item.skuCode} (Requested: ${item.requestedQuantity}, Available: ${item.availableQuantity})`
+              )
+              .join("\n")}`
+          );
+        } else {
+          alert("All items are in stock. Proceeding to checkout...");
+          setIsPaymentModalOpen(true);
+        }
+      } catch (error) {
+        console.error("Error checking stock availability:", error);
+        alert("An error occurred while checking stock availability.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const defaultAddress = `${session?.user?.address?.street_address}, ${session?.user?.address?.locality}, ${session?.user?.address?.region}, ${session?.user?.address?.postal_code}, ${session?.user?.address?.country}`;
+    const handleMakePayment = async () => {
+      const fullName = session?.user?.name || "";
+      const [firstName, lastName] = fullName.split(" ");
+      const email = session?.user?.email || "";
+
+      try {
+        const items = cart.map((item) => ({
+          skuCode: item.name,
+          quantity: item.quantity,
+        }));
         const order = {
           items: items,
-          total: totalPrice, // Set this based on the total amount of the order
-          shippingAddress: address, // Assuming 'address' is captured from the form or state
-          date: "2001-05-25", // Format the date as 'YYYY-MM-DD'
+          total: totalPrice,
+          shippingAddress: useDefaultAddress ? defaultAddress : address,
+          date: "2001-05-25",
           userDetails: {
-            email: email, // Replace with the actual user's email
-            firstName:firstName, // Replace with the actual user's first name
-            lastName: lastName // Replace with the actual user's last name
-          }
+            email: email,
+            firstName: firstName,
+            lastName: lastName,
+          },
         };
-        
-        const data= await placeOrder(order);
+
+        const data = await placeOrder(order);
         setPlacedOrder(data);
-        alert("Order placed successfully!");
+        toast.success("Order placed successfully!");
         setCart([]);
+        setUseDefaultAddress(true);
         setIsPayModalOpen(true);
         setIsPaymentModalOpen(false);
-      }catch (error) {
-          alert(error);
-        }
-      //setIsPaymentModalOpen(false);
-       // Open Pay modal
+      } catch (error: any) {
+        toast.error(error);
+      }
     };
 
     const pay = async (orderId?: number) => {
@@ -338,23 +346,26 @@ export default function ECommerceApp() {
         if (!orderId) {
           throw new Error("Invalid order ID");
         }
-       const data= await payOrder(orderId);
-        alert("Payment processed successfully!");
+        const data = await payOrder(orderId);
+        toast.success("Payment processed successfully!");
         setIsPayModalOpen(false);
-      } catch (error) {
-        alert(error);
+      } catch (error: any) {
+        toast.error(error);
       }
-    }
-  
+    };
 
     return (
       <>
         {/* Cart Section */}
         {isCartOpen && (
           <>
+            <Toaster />
             <div
               className="fixed inset-0 bg-black bg-opacity-50 z-40"
-              onClick={() => setIsCartOpen(false)}
+              onClick={() => {
+                setIsCartOpen(false);
+                setUnavailableItems([]);
+              }}
             />
             <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-background shadow-lg p-6 overflow-y-auto z-50">
               <div className="flex justify-between items-center mb-6">
@@ -362,7 +373,10 @@ export default function ECommerceApp() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setIsCartOpen(false)}
+                  onClick={() => {
+                    setIsCartOpen(false);
+                    setUnavailableItems([]);
+                  }}
                 >
                   <XIcon className="h-6 w-6" />
                 </Button>
@@ -427,6 +441,23 @@ export default function ECommerceApp() {
                         ${totalPrice.toFixed(2)}
                       </span>
                     </div>
+                    {unavailableItems.length > 0 && (
+                      <div className="mb-4">
+                        <h3 className="text-red-500 font-semibold mb-2">
+                          Out of Stock Items
+                        </h3>
+                        <ul>
+                          {unavailableItems.map((item) => (
+                            <li key={item.skuCode}>
+                              {item.skuCode} - (Requested:{" "}
+                              {item.requestedQuantity}, Available:{" "}
+                              {item.availableQuantity})
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
                     <Button
                       className="w-full"
                       onClick={handleProceedToCheckout}
@@ -444,46 +475,63 @@ export default function ECommerceApp() {
         {isPaymentModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
             <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-
               <h2 className="text-2xl font-bold mb-4">Wish Order Details</h2>
               <p>
-                <>
-                  {cart.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between mb-4"
-                    >
-                      <div className="flex items-center">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-16 h-16 object-cover rounded-md mr-4"
-                        />
-                        <div>
-                          <h3 className="font-semibold">{item.name}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            ${item.price.toFixed(2)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="mx-5">{item.quantity}</span>
+                {cart.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between mb-4"
+                  >
+                    <div className="flex items-center">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-16 h-16 object-cover rounded-md mr-4"
+                      />
+                      <div>
+                        <h3 className="font-semibold">{item.name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          ${item.price.toFixed(2)}
+                        </p>
                       </div>
                     </div>
-                  ))}
-                </>
+                    <div className="flex items-center">
+                      <span className="mx-5">{item.quantity}</span>
+                    </div>
+                  </div>
+                ))}
               </p>
               <p className="mb-4 font-semibold">
                 Total Amount: ${totalPrice.toFixed(2)}
               </p>
-              <label className="block mb-2 font-medium">Address</label>
-              <input
-                type="text"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Enter your address"
-                className="w-full p-2 border rounded-md mb-4"
-              />
+
+              <div className="flex items-center mb-4">
+                <input
+                  type="checkbox"
+                  checked={useDefaultAddress}
+                  onChange={() => setUseDefaultAddress(!useDefaultAddress)}
+                  className="mr-2"
+                />
+                <label className="font-medium">Use default address</label>
+              </div>
+
+              {useDefaultAddress ? (
+                <div className="p-4 border rounded-lg mb-4">
+                  <h3 className="font-semibold">Default Address</h3>
+                  <p>{`${session?.user?.address?.street_address}, ${session?.user?.address?.locality}, ${session?.user?.address?.region}, ${session?.user?.address?.postal_code}, ${session?.user?.address?.country}`}</p>
+                </div>
+              ) : (
+                <>
+                  <label className="block mb-2 font-medium">New Address</label>
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Enter your address"
+                    className="w-full p-2 border rounded-md mb-4"
+                  />
+                </>
+              )}
               <div className="flex justify-end">
                 <Button
                   variant="ghost"
@@ -492,74 +540,20 @@ export default function ECommerceApp() {
                 >
                   Cancel
                 </Button>
-
                 <Button onClick={handleMakePayment}>Add to Wish List</Button>
-
               </div>
             </div>
           </div>
         )}
-  
+
         {/* Pay Modal */}
         {isPayModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-  <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-    <h2 className="text-2xl font-bold mb-4">Pay</h2>
-    {/* Dummy Payment Gateway */}
-    <form onSubmit={(e) => { 
-      e.preventDefault(); 
-      alert("Payment processed successfully!");
-    }}>
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
-        <input
-          type="text"
-          placeholder="1234 5678 9012 3456"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-        />
-      </div>
-      <div className="flex justify-between mb-4">
-        <div className="w-1/2 pr-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-          <input
-            type="text"
-            placeholder="MM/YY"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
+          <PayModal
+            orderId={placedOrder?.orderId}
+            total={placedOrder?.total}
+            pay={pay}
+            setIsPayModalOpen={setIsPayModalOpen}
           />
-        </div>
-        <div className="w-1/2 pl-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-          <input
-            type="text"
-            placeholder="123"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-      </div>
-      {/* Display Payment Amount */}
-      <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-4 flex justify-between items-center">
-        <span className="text-lg font-semibold text-gray-800">Total Amount</span>
-        <span className="text-xl font-bold text-green-600">${placedOrder?.total}</span>
-      </div>
-      <div className="flex justify-end space-x-4 mt-4">
-        <Button onClick={()=>pay(placedOrder?.orderId)}>
-          Pay Now
-        </Button>
-        <Button
-          variant="secondary" 
-          onClick={() => setIsPayModalOpen(false)} 
-        >
-          Pay Later
-        </Button>
-      </div>
-    </form>
-  </div>
-</div>
-
-        
         )}
       </>
     );

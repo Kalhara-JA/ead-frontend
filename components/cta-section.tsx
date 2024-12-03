@@ -13,7 +13,7 @@ const CTASignUpSection = () => {
             </h2>
             <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
               Join millions of satisfied customers and experience the
-              convenience of Easy UI. Sign up now and get 10% off your first
+              convenience of Shop@Us. Sign up now and get 10% off your first
               purchase!
             </p>
           </div>

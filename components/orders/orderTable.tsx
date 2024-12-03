@@ -12,7 +12,7 @@ import { Order } from "@/types/orderTypes";
 interface OrderTableProps {
   orders: Order[];
   setSelectedOrder: (order: Order) => void;
-  setIsDetailsModalOpen: (isOpen: boolean) => void;
+  setIsDetailsModalOpen: (orderNumber:string) => void;
   setIsStatusModalOpen: (isOpen: boolean) => void;
   setIsPaymentModalOpen: (isOpen: boolean) => void;
 }
@@ -52,9 +52,9 @@ function OrderTable({
                 className={`inline-block w-36 px-4 py-2 text-sm font-semibold rounded-md text-center transition-all ${
                   order.deliveryStatus === "PENDING"
                     ? "bg-yellow-100 text-yellow-800 border border-yellow-300"
-                    : order.deliveryStatus === "ORDERED"
+                    : order.deliveryStatus === "SHIPPED"
                     ? "bg-blue-100 text-blue-800 border border-blue-300"
-                    : order.deliveryStatus === "RECEIVED"
+                    : order.deliveryStatus === "DELIVERED"
                     ? "bg-green-100 text-green-800 border border-green-300"
                     : order.deliveryStatus === "CANCELED"
                     ? "bg-red-100 text-red-800 border border-red-300"
@@ -66,24 +66,25 @@ function OrderTable({
             </TableCell>
             <TableCell>
               <div className="flex justify-center items-center">
-                {order.paymentStatus !== "PAID" && (
-                  <Button
-                    onClick={() => {
-                      setSelectedOrder(order);
-                      setIsPaymentModalOpen(true);
-                    }}
-                    className={`w-48 px-2 py-1 text-sm font-semibold rounded-md text-center transition-all ${
-                      order.paymentStatus === "PAID"
-                        ? "bg-emerald-100 text-emerald-800 border border-emerald-300 cursor-not-allowed"
-                        : "bg-indigo-800 text-white hover:bg-indigo-600"
-                    }`}
-                    disabled={order.paymentStatus === "PAID"}
-                  >
-                    {order.paymentStatus === "PAID"
-                      ? "Payment Successful"
-                      : "Make Payment"}
-                  </Button>
-                )}
+                {order.paymentStatus === "CANCELED" && (
+                  <span className="w-48 px-2 py-1 text-sm font-semibold text-red-800 bg-red-100 rounded-md text-center">
+                   ❌CANCELED!
+                </span>)}
+                {order.paymentStatus === "UNPAID" && (
+                  
+                   <Button
+                   className="w-48 px-2 py-1 text-sm font-semibold rounded-md text-center transition-all bg-indigo-800 text-white hover:bg-indigo-600"
+
+                   onClick={() => {
+                     setSelectedOrder(order);
+                     setIsPaymentModalOpen(true);
+                   }}
+                 >
+             
+                     Make Payment
+                 </Button>
+)}
+              
                 {order.paymentStatus === "PAID" && (
                   <span className="w-48 px-2 py-1 text-sm font-semibold text-green-800 bg-green-100 rounded-md text-center">
                     ✅Payment Done!
@@ -97,7 +98,7 @@ function OrderTable({
               <Button
                 onClick={() => {
                   setSelectedOrder(order);
-                  setIsDetailsModalOpen(true);
+                  setIsDetailsModalOpen(order.orderNumber);
                 }}
               >
                 View

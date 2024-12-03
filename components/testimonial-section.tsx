@@ -4,16 +4,16 @@ import { Card, CardContent } from './ui/card';
 
 const testimonials = [
   {
-    text: "Easy UI has revolutionized my online shopping experience. The variety of products and ease of use are unmatched!",
-    author: "Sarah J.",
+    text: "Shop@Us has revolutionized shopping experience. The variety of products and ease of use are unmatched!",
+    author: "Kalhara JAK.",
   },
   {
-    text: "I love the deals and the customer service is top-notch. Easy UI is my go-to for all my shopping needs.",
-    author: "Mike T.",
+    text: "I love the deals and the customer service is top-notch. Shop@Us  is my go-to for all my shopping needs.",
+    author: "Kavindu Dilashan.",
   },
   {
-    text: "Fast shipping and great prices. Easy UI has made online shopping a breeze for me! Easy UI is my fav.",
-    author: "Emily R.",
+    text: "Fast shipping and great prices. Shop@Us has made online shopping a breeze for me! Shop@Us  is my fav.",
+    author: "Navindu Chathuranga.",
   },
 ];
 
