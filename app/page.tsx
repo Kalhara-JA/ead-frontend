@@ -250,13 +250,6 @@ export default function ECommerceApp() {
  
 
     const [useDefaultAddress, setUseDefaultAddress] = useState(true); // State to switch between default and new address
-
-    const [isPayModalOpen, setIsPayModalOpen] = useState(false); // New state for Pay modal
-    const [address, setAddress] = useState("");
-
-    const [placedOrder, setPlacedOrder] = useState<PlaceOrderResponse | null>(
-      null
-    );
     const [unavailableItems, setUnavailableItems] = useState<
       {
         skuCode: string;
