@@ -315,6 +315,11 @@ export default function ECommerceApp() {
       const [firstName, lastName] = fullName.split(" ");
       const email = session?.user?.email || "";
 
+      if(!useDefaultAddress){
+        if (!address) {
+          return toast.error("Please enter your address.");
+      }}
+
       try {
         const items = cart.map((item) => ({
           skuCode: item.skuCode,
