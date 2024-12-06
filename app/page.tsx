@@ -1,34 +1,35 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
+import { ArrowRight, ShoppingBag } from "lucide-react";
 import {
-  ShoppingCartIcon,
   MenuIcon,
-  XIcon,
   MinusIcon,
   PlusIcon,
+  ShoppingCartIcon,
   TrashIcon,
+  XIcon,
 } from "lucide-react";
-import { ArrowRight, ShoppingBag } from "lucide-react";
-import CompanyLogoSection from "@/components/company-logo";
-import DealsSection from "@/components/deals-section";
-import CategorySection from "@/components/category-section";
-import TestimonialSection from "@/components/testimonial-section";
-import FeaturesSection from "@/components/features-section";
-import CTASignUpSection from "@/components/cta-section";
-import SiteFooter from "@/components/site-footer";
-import ProductPage from "@/components/product-section";
-import Header from "@/components/site-header";
-import { getAllProducts } from "@/services/productService";
-import { useSession } from "next-auth/react";
-import { PlaceOrderResponse } from "@/types/orderTypes";
 import { payOrder, placeOrder } from "@/services/orderService";
 import toast, { Toaster } from "react-hot-toast";
-import axios from "axios";
-import { postOrders } from "@/services/orderServices";
+import { useEffect, useRef, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import CTASignUpSection from "@/components/cta-section";
+import CategorySection from "@/components/category-section";
+import CompanyLogoSection from "@/components/company-logo";
+import DealsSection from "@/components/deals-section";
+import FeaturesSection from "@/components/features-section";
+import Header from "@/components/site-header";
 import PayModal from "@/components/orders/payModal";
+import { PlaceOrderResponse } from "@/types/orderTypes";
+import ProductPage from "@/components/product-section";
+import SiteFooter from "@/components/site-footer";
+import TestimonialSection from "@/components/testimonial-section";
+import axios from "axios";
 import { checkInventory } from "@/services/inventoryServices";
+import { getAllProducts } from "@/services/productService";
+import { postOrders } from "@/services/orderServices";
+import { useSession } from "next-auth/react";
 
 const categories = [
   { name: "Marketing Tools", icon: "📈" },
@@ -80,6 +81,7 @@ const deals = [
 
 type CartItem = {
   id: number;
+  skuCode: string;
   name: string;
   price: number;
   image: string;
@@ -88,18 +90,6 @@ type CartItem = {
 
 export default function ECommerceApp() {
   const [currentPage, setCurrentPage] = useState("landing");
-
-  const [cart, setCart] = useState<
-    {
-      id: number;
-      skuCode: string;	
-      name: string;
-      price: number;
-      image: string;
-      quantity: number;
-    }[]
-  >([]);
-
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const [products, setProducts] = useState([]);
