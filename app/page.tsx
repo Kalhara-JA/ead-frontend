@@ -42,7 +42,8 @@ const categories = [
 const deals = [
   {
     id: 7,
-    name: "iphone_15",
+    name: "iPHONE",
+    skuCode: "iphone_15",
     price: 79.99,
     originalPrice: 129.99,
     image: "https://via.placeholder.com/1000",
@@ -50,6 +51,7 @@ const deals = [
   },
   {
     id: 8,
+    skuCode: "pixel_8",
     name: "Cloud Sync Ultimate",
     price: 49.99,
     originalPrice: 89.99,
@@ -57,7 +59,9 @@ const deals = [
     tag: "Deal of the Day",
   },
   {
+    
     id: 9,
+    skuCode: "galaxy_24",
     name: "Marketing Automation Suite",
     price: 159.99,
     originalPrice: 249.99,
@@ -84,6 +88,17 @@ type CartItem = {
 
 export default function ECommerceApp() {
   const [currentPage, setCurrentPage] = useState("landing");
+
+  const [cart, setCart] = useState<
+    {
+      id: number;
+      skuCode: string;	
+      name: string;
+      price: number;
+      image: string;
+      quantity: number;
+    }[]
+  >([]);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
 
@@ -253,6 +268,7 @@ useEffect(() => {
         availableQuantity: number;
       }[]
     >([]);
+
     const handleProceedToCheckout = async () => {
       setLoading(true);
       const outOfStockItems = [];
@@ -260,7 +276,7 @@ useEffect(() => {
         // Loop through cart items one by one and check availability
         console.log(cart);
         for (const item of cart) {
-          const response = await checkInventory(item.name, item.quantity);
+          const response = await checkInventory(item.skuCode, item.quantity);
           console.log(response.availableQuantity);
 
           // Check the response for availability
@@ -284,12 +300,12 @@ useEffect(() => {
               .join("\n")}`
           );
         } else {
-          alert("All items are in stock. Proceeding to checkout...");
+          toast.success("All items are in stock. Proceeding to checkout...");
           setIsPaymentModalOpen(true);
         }
       } catch (error) {
         console.error("Error checking stock availability:", error);
-        alert("An error occurred while checking stock availability.");
+        toast.error("An error occurred while checking stock availability.");
       } finally {
         setLoading(false);
       }
@@ -297,21 +313,29 @@ useEffect(() => {
     console.log(cart);
 
     const defaultAddress = `${session?.user?.address?.street_address}, ${session?.user?.address?.locality}, ${session?.user?.address?.region}, ${session?.user?.address?.postal_code}, ${session?.user?.address?.country}`;
+   
     const handleMakePayment = async () => {
       const fullName = session?.user?.name || "";
       const [firstName, lastName] = fullName.split(" ");
       const email = session?.user?.email || "";
+
+      if(!useDefaultAddress){
+        if (!address) {
+          return toast.error("Please enter your address.");
+      }}
+
       console.log("cart", cart);
+
       try {
         const items = cart.map((item) => ({
-          skuCode: item.name,
+          skuCode: item.skuCode,
           quantity: item.quantity,
         }));
         const order = {
           items: items,
           total: totalPrice,
           shippingAddress: useDefaultAddress ? defaultAddress : address,
-          date: "2001-05-25",
+          date: new Date().toISOString(),
           userDetails: {
             email: email,
             firstName: firstName,
@@ -349,7 +373,6 @@ useEffect(() => {
         {/* Cart Section */}
         {isCartOpen && (
           <>
-            <Toaster />
             <div
               className="fixed inset-0 bg-black bg-opacity-50 z-40"
               onClick={() => {
