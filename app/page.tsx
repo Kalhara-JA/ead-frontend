@@ -70,7 +70,7 @@ const deals = [
   },
   {
     id: 10,
-    name: "Collaboration Platform",
+    name: "lol Platform",
     price: 29.99,
     originalPrice: 59.99,
     image: "https://via.placeholder.com/1000",
@@ -78,8 +78,17 @@ const deals = [
   },
 ];
 
+type CartItem = {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
+};
+
 export default function ECommerceApp() {
   const [currentPage, setCurrentPage] = useState("landing");
+
   const [cart, setCart] = useState<
     {
       id: number;
@@ -90,6 +99,7 @@ export default function ECommerceApp() {
       quantity: number;
     }[]
   >([]);
+
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const [products, setProducts] = useState([]);
@@ -110,74 +120,6 @@ export default function ECommerceApp() {
 
     getProducts();
   }, []);
-
-  console.log(products);
-  // if (loading) return <p>Loading...</p>;
-
-  useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) {
-      setCart(JSON.parse(savedCart));
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  }, [cart]);
-
-  // @ts-ignore
-  const addToCart = (product) => {
-    // @ts-ignore
-    const existingItem = cart.find((item) => item.id === product.id);
-    if (existingItem) {
-      // @ts-ignore
-      setCart(
-        // @ts-ignore
-        cart.map((item) =>
-          // @ts-ignore
-          item.id === product.id
-            ? // @ts-ignore
-              { ...item, quantity: item.quantity + 1 }
-            : item
-        )
-      );
-    } else {
-      // @ts-ignore
-      setCart([...cart, { ...product, quantity: 1 }]);
-    }
-  };
-
-  // @ts-ignore
-  const removeFromCart = (productId) => {
-    // @ts-ignore
-    setCart(cart.filter((item) => item.id !== productId));
-  };
-
-  // @ts-ignore
-  const updateQuantity = (productId, newQuantity) => {
-    if (newQuantity === 0) {
-      // @ts-ignore
-      removeFromCart(productId);
-    } else {
-      // @ts-ignore
-      setCart(
-        // @ts-ignore
-        cart.map((item) =>
-          // @ts-ignore
-          item.id === productId ? { ...item, quantity: newQuantity } : item
-        )
-      );
-    }
-  };
-
-  // @ts-ignore
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  // @ts-ignore
-  const totalPrice = cart.reduce(
-    // @ts-ignore
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
 
   const renderLandingPage = () => (
     // Landing Page  Section
@@ -247,17 +189,78 @@ export default function ECommerceApp() {
   );
   const { data: session } = useSession();
 
+//Staring cart section
+const [cart, setCart] = useState<CartItem[]>(() => {
+  const savedCart = localStorage.getItem("cart");
+  return savedCart ? JSON.parse(savedCart) : [];
+});
+useEffect(() => {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}, [cart]);
+  // @ts-ignore
+  const addToCart = (product) => {
+    // @ts-ignore
+    const existingItem = cart.find((item) => item.id === product.id);
+    if (existingItem) {
+      // @ts-ignore
+      setCart(
+        // @ts-ignore
+        cart.map((item) =>
+          // @ts-ignore
+          item.id === product.id
+            ? // @ts-ignore
+              { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      );
+    } else {
+      // @ts-ignore
+      setCart([...cart, { ...product, quantity: 1 }]);
+    }
+  };
+
+  // @ts-ignore
+  const removeFromCart = (productId) => {
+    // @ts-ignore
+    setCart(cart.filter((item) => item.id !== productId));
+  };
+
+  // @ts-ignore
+  const updateQuantity = (productId, newQuantity) => {
+    if (newQuantity === 0) {
+      // @ts-ignore
+      removeFromCart(productId);
+    } else {
+      // @ts-ignore
+      setCart(
+        // @ts-ignore
+        cart.map((item) =>
+          // @ts-ignore
+          item.id === productId ? { ...item, quantity: newQuantity } : item
+        )
+      );
+    }
+  };
+
+  // @ts-ignore
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  // @ts-ignore
+  const totalPrice = cart.reduce(
+    // @ts-ignore
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+
   const renderCart = () => {
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-
-    const [useDefaultAddress, setUseDefaultAddress] = useState(true); // State to switch between default and new address
-
     const [isPayModalOpen, setIsPayModalOpen] = useState(false); // New state for Pay modal
     const [address, setAddress] = useState("");
-
     const [placedOrder, setPlacedOrder] = useState<PlaceOrderResponse | null>(
       null
     );
+
+    const [useDefaultAddress, setUseDefaultAddress] = useState(true); // State to switch between default and new address
     const [unavailableItems, setUnavailableItems] = useState<
       {
         skuCode: string;
@@ -277,7 +280,7 @@ export default function ECommerceApp() {
           console.log(response.availableQuantity);
 
           // Check the response for availability
-          if (response.inStock == false) {
+          if (response.isInStock == false) {
             outOfStockItems.push({
               skuCode: item.name,
               requestedQuantity: item.quantity,
@@ -307,6 +310,7 @@ export default function ECommerceApp() {
         setLoading(false);
       }
     };
+    console.log(cart);
 
     const defaultAddress = `${session?.user?.address?.street_address}, ${session?.user?.address?.locality}, ${session?.user?.address?.region}, ${session?.user?.address?.postal_code}, ${session?.user?.address?.country}`;
    
@@ -319,6 +323,8 @@ export default function ECommerceApp() {
         if (!address) {
           return toast.error("Please enter your address.");
       }}
+
+      console.log("cart", cart);
 
       try {
         const items = cart.map((item) => ({

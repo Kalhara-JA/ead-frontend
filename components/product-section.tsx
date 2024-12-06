@@ -260,6 +260,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
                   addToCart={addToCart}
                 />
               ))}
+              
             </div>
           )}
         </section>
