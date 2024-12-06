@@ -23,6 +23,7 @@ import { getQuantityOfAProduct } from "@/services/productService";
 import ProductDialog from "@/app/product/ProductDialog";
 import FiltersSidebar from "@/app/product/filterSlideBar";
 import { Toaster } from "react-hot-toast";
+import { MenuIcon } from "lucide-react";
 
 interface Product {
   id: number;
@@ -92,9 +93,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm bg-transparent border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-blue-300"
           />
-          {/* <DialogTrigger asChild>
-            <Button variant="outline">Edit Profile</Button>
-          </DialogTrigger> */}
+
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Edit profile</DialogTitle>
@@ -122,25 +121,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
           </DialogContent>
         </Dialog>
       </div>
-      <header className="flex items-center justify-between p-4 border-b bg-white">
-        {/* <div className="flex items-center space-x-4">
-      
-          <Button
-            variant="outline"
-            onClick={() => setIsFilterOpen((prev) => !prev)}
-            className="md:hidden"
-          >
-            ☰
-          </Button>
-        </div> */}
-        {/* Transparent Search Bar */}
-        {/* <Input
-          placeholder="Search Products..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm bg-transparent border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-blue-300"
-        /> */}
-      </header>
+      <header className="flex items-center justify-between p-4 border-b bg-white"></header>
 
       {/* Filters Sidebar for Mobile */}
       {isFilterOpen && (
@@ -159,17 +140,20 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
       {/* Main Content */}
       <div className="flex h-screen">
         {/* Toggle Button for Mobile/Tablet */}
+      
         <button
-          className="md:hidden p-2 fixed top-4 left-4 z-20 bg-gray-200 rounded-md shadow-lg"
+          className="md:hidden p-2 fixed top-6 left-2 z-20 bg-gray-200 mt-24 rounded-md shadow-lg"
           onClick={() => setSidebarOpen(!sidebarOpen)}
         >
-          {sidebarOpen ? "Close" : "Filters"}
+          {sidebarOpen ? "Close" : <MenuIcon className="h-5 w-5" />}
         </button>
-
         {/* Sidebar */}
         <aside
-          className={`fixed md:sticky top-0 z-10 w-3/4 md:w-1/4 h-screen bg-gray-100 p-4 border-r overflow-y-auto`}
+          className={`fixed top-0 z-30 h-screen w-3/4 bg-gray-100 p-4 border-r overflow-y-auto transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} 
+        md:sticky md:translate-x-0 md:w-1/4`}
         >
+          
           <h2 className="text-lg font-semibold mb-4">Filters</h2>
           {/* Category */}
           <div className="mb-6">
@@ -246,6 +230,14 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
           </Button>
         </aside>
 
+        {/* Overlay for mobile when sidebar is open */}
+        {sidebarOpen && (
+          <div
+            className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-20 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* Products Section */}
         <section className="flex-1 ml-auto md:ml-1/4 p-4 overflow-y-auto h-screen">
           {filteredProducts.length === 0 ? (
@@ -260,7 +252,6 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
                   addToCart={addToCart}
                 />
               ))}
-              
             </div>
           )}
         </section>
