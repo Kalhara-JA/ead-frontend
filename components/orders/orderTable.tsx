@@ -41,7 +41,7 @@ function OrderTable({
       <TableBody>
         {orders.map((order) => (
           <TableRow key={order.id}>
-            <TableCell>{order.id}</TableCell>
+            <TableCell>{order.orderNumber}</TableCell>
             <TableCell>${order.total}</TableCell>
             <TableCell>
               <Button
@@ -49,6 +49,7 @@ function OrderTable({
                   setSelectedOrder(order);
                   setIsStatusModalOpen(true);
                 }}
+                disabled
                 className={`inline-block w-36 px-4 py-2 text-sm font-semibold rounded-md text-center transition-all ${
                   order.deliveryStatus === "PENDING"
                     ? "bg-yellow-100 text-yellow-800 border border-yellow-300"
@@ -65,6 +66,7 @@ function OrderTable({
               </Button>
             </TableCell>
             <TableCell>
+              
               <div className="flex justify-center items-center">
                 {order.paymentStatus === "CANCELED" && (
                   <span className="w-48 px-2 py-1 text-sm font-semibold text-red-800 bg-red-100 rounded-md text-center">

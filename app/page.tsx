@@ -1,34 +1,35 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
+import { ArrowRight, ShoppingBag } from "lucide-react";
 import {
-  ShoppingCartIcon,
   MenuIcon,
-  XIcon,
   MinusIcon,
   PlusIcon,
+  ShoppingCartIcon,
   TrashIcon,
+  XIcon,
 } from "lucide-react";
-import { ArrowRight, ShoppingBag } from "lucide-react";
-import CompanyLogoSection from "@/components/company-logo";
-import DealsSection from "@/components/deals-section";
-import CategorySection from "@/components/category-section";
-import TestimonialSection from "@/components/testimonial-section";
-import FeaturesSection from "@/components/features-section";
-import CTASignUpSection from "@/components/cta-section";
-import SiteFooter from "@/components/site-footer";
-import ProductPage from "@/components/product-section";
-import Header from "@/components/site-header";
-import { getAllProducts } from "@/services/productService";
-import { useSession } from "next-auth/react";
-import { PlaceOrderResponse } from "@/types/orderTypes";
 import { payOrder, placeOrder } from "@/services/orderService";
 import toast, { Toaster } from "react-hot-toast";
-import axios from "axios";
-import { postOrders } from "@/services/orderServices";
+import { useEffect, useRef, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import CTASignUpSection from "@/components/cta-section";
+import CategorySection from "@/components/category-section";
+import CompanyLogoSection from "@/components/company-logo";
+import DealsSection from "@/components/deals-section";
+import FeaturesSection from "@/components/features-section";
+import Header from "@/components/site-header";
 import PayModal from "@/components/orders/payModal";
+import { PlaceOrderResponse } from "@/types/orderTypes";
+import ProductPage from "@/components/product-section";
+import SiteFooter from "@/components/site-footer";
+import TestimonialSection from "@/components/testimonial-section";
+import axios from "axios";
 import { checkInventory } from "@/services/inventoryServices";
+import { getAllProducts } from "@/services/productService";
+import { postOrders } from "@/services/orderServices";
+import { useSession } from "next-auth/react";
 
 const categories = [
   { name: "Marketing Tools", icon: "📈" },
@@ -42,7 +43,8 @@ const categories = [
 const deals = [
   {
     id: 7,
-    name: "iphone_15",
+    name: "iPHONE",
+    skuCode: "iphone_15",
     price: 79.99,
     originalPrice: 129.99,
     image: "https://via.placeholder.com/1000",
@@ -50,6 +52,7 @@ const deals = [
   },
   {
     id: 8,
+    skuCode: "pixel_8",
     name: "Cloud Sync Ultimate",
     price: 49.99,
     originalPrice: 89.99,
@@ -57,7 +60,9 @@ const deals = [
     tag: "Deal of the Day",
   },
   {
+    
     id: 9,
+    skuCode: "galaxy_24",
     name: "Marketing Automation Suite",
     price: 159.99,
     originalPrice: 249.99,
@@ -66,7 +71,7 @@ const deals = [
   },
   {
     id: 10,
-    name: "Collaboration Platform",
+    name: "lol Platform",
     price: 29.99,
     originalPrice: 59.99,
     image: "https://via.placeholder.com/1000",
@@ -74,17 +79,17 @@ const deals = [
   },
 ];
 
+type CartItem = {
+  id: number;
+  skuCode: string;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
+};
+
 export default function ECommerceApp() {
   const [currentPage, setCurrentPage] = useState("landing");
-  const [cart, setCart] = useState<
-    {
-      id: number;
-      name: string;
-      price: number;
-      image: string;
-      quantity: number;
-    }[]
-  >([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const [products, setProducts] = useState([]);
@@ -105,74 +110,6 @@ export default function ECommerceApp() {
 
     getProducts();
   }, []);
-
-  console.log(products);
-  // if (loading) return <p>Loading...</p>;
-
-  useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) {
-      setCart(JSON.parse(savedCart));
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  }, [cart]);
-
-  // @ts-ignore
-  const addToCart = (product) => {
-    // @ts-ignore
-    const existingItem = cart.find((item) => item.id === product.id);
-    if (existingItem) {
-      // @ts-ignore
-      setCart(
-        // @ts-ignore
-        cart.map((item) =>
-          // @ts-ignore
-          item.id === product.id
-            ? // @ts-ignore
-              { ...item, quantity: item.quantity + 1 }
-            : item
-        )
-      );
-    } else {
-      // @ts-ignore
-      setCart([...cart, { ...product, quantity: 1 }]);
-    }
-  };
-
-  // @ts-ignore
-  const removeFromCart = (productId) => {
-    // @ts-ignore
-    setCart(cart.filter((item) => item.id !== productId));
-  };
-
-  // @ts-ignore
-  const updateQuantity = (productId, newQuantity) => {
-    if (newQuantity === 0) {
-      // @ts-ignore
-      removeFromCart(productId);
-    } else {
-      // @ts-ignore
-      setCart(
-        // @ts-ignore
-        cart.map((item) =>
-          // @ts-ignore
-          item.id === productId ? { ...item, quantity: newQuantity } : item
-        )
-      );
-    }
-  };
-
-  // @ts-ignore
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  // @ts-ignore
-  const totalPrice = cart.reduce(
-    // @ts-ignore
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
 
   const renderLandingPage = () => (
     // Landing Page  Section
@@ -242,12 +179,76 @@ export default function ECommerceApp() {
   );
   const { data: session } = useSession();
 
+//Staring cart section
+const [cart, setCart] = useState<CartItem[]>(() => {
+  const savedCart = localStorage.getItem("cart");
+  return savedCart ? JSON.parse(savedCart) : [];
+});
+useEffect(() => {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}, [cart]);
+  // @ts-ignore
+  const addToCart = (product) => {
+    // @ts-ignore
+    const existingItem = cart.find((item) => item.id === product.id);
+    if (existingItem) {
+      // @ts-ignore
+      setCart(
+        // @ts-ignore
+        cart.map((item) =>
+          // @ts-ignore
+          item.id === product.id
+            ? // @ts-ignore
+              { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      );
+    } else {
+      // @ts-ignore
+      setCart([...cart, { ...product, quantity: 1 }]);
+    }
+  };
+
+  // @ts-ignore
+  const removeFromCart = (productId) => {
+    // @ts-ignore
+    setCart(cart.filter((item) => item.id !== productId));
+  };
+
+  // @ts-ignore
+  const updateQuantity = (productId, newQuantity) => {
+    if (newQuantity === 0) {
+      // @ts-ignore
+      removeFromCart(productId);
+    } else {
+      // @ts-ignore
+      setCart(
+        // @ts-ignore
+        cart.map((item) =>
+          // @ts-ignore
+          item.id === productId ? { ...item, quantity: newQuantity } : item
+        )
+      );
+    }
+  };
+
+  // @ts-ignore
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  // @ts-ignore
+  const totalPrice = cart.reduce(
+    // @ts-ignore
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+
   const renderCart = () => {
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isPayModalOpen, setIsPayModalOpen] = useState(false); // New state for Pay modal
     const [address, setAddress] = useState("");
-    const [placedOrder, setPlacedOrder] = useState<PlaceOrderResponse | null>(null);
- 
+    const [placedOrder, setPlacedOrder] = useState<PlaceOrderResponse | null>(
+      null
+    );
 
     const [useDefaultAddress, setUseDefaultAddress] = useState(true); // State to switch between default and new address
     const [unavailableItems, setUnavailableItems] = useState<
@@ -257,6 +258,7 @@ export default function ECommerceApp() {
         availableQuantity: number;
       }[]
     >([]);
+
     const handleProceedToCheckout = async () => {
       setLoading(true);
       const outOfStockItems = [];
@@ -264,11 +266,11 @@ export default function ECommerceApp() {
         // Loop through cart items one by one and check availability
         console.log(cart);
         for (const item of cart) {
-          const response = await checkInventory(item.name, item.quantity);
+          const response = await checkInventory(item.skuCode, item.quantity);
           console.log(response.availableQuantity);
 
           // Check the response for availability
-          if (response.inStock == false) {
+          if (response.isInStock == false) {
             outOfStockItems.push({
               skuCode: item.name,
               requestedQuantity: item.quantity,
@@ -288,33 +290,42 @@ export default function ECommerceApp() {
               .join("\n")}`
           );
         } else {
-          alert("All items are in stock. Proceeding to checkout...");
+          toast.success("All items are in stock. Proceeding to checkout...");
           setIsPaymentModalOpen(true);
         }
       } catch (error) {
         console.error("Error checking stock availability:", error);
-        alert("An error occurred while checking stock availability.");
+        toast.error("An error occurred while checking stock availability.");
       } finally {
         setLoading(false);
       }
     };
+    console.log(cart);
 
     const defaultAddress = `${session?.user?.address?.street_address}, ${session?.user?.address?.locality}, ${session?.user?.address?.region}, ${session?.user?.address?.postal_code}, ${session?.user?.address?.country}`;
+   
     const handleMakePayment = async () => {
       const fullName = session?.user?.name || "";
       const [firstName, lastName] = fullName.split(" ");
       const email = session?.user?.email || "";
 
+      if(!useDefaultAddress){
+        if (!address) {
+          return toast.error("Please enter your address.");
+      }}
+
+      console.log("cart", cart);
+
       try {
         const items = cart.map((item) => ({
-          skuCode: item.name,
+          skuCode: item.skuCode,
           quantity: item.quantity,
         }));
         const order = {
           items: items,
           total: totalPrice,
           shippingAddress: useDefaultAddress ? defaultAddress : address,
-          date: "2001-05-25",
+          date: new Date().toISOString(),
           userDetails: {
             email: email,
             firstName: firstName,
@@ -352,7 +363,6 @@ export default function ECommerceApp() {
         {/* Cart Section */}
         {isCartOpen && (
           <>
-            <Toaster />
             <div
               className="fixed inset-0 bg-black bg-opacity-50 z-40"
               onClick={() => {
