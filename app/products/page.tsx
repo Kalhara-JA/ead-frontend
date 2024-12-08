@@ -1,3 +1,5 @@
+'use client'
+
 import {
   Dialog,
   DialogContent,
@@ -5,7 +7,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import React, { useEffect, useState } from "react";
 import {
@@ -14,7 +15,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
+} from "@/components/ui/select";
+import { getAllProducts, getQuantityOfAProduct } from "@/services/productService";
 
 import { Button } from "@/components/ui/button";
 import FiltersSidebar from "@/components/products/filterSlideBar";
@@ -22,9 +24,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MenuIcon } from "lucide-react";
 import ProductDialog from "@/components/products/ProductDialog";
-import { Slider } from "./ui/slider";
+import { Slider } from "@/components/ui/slider";
 import { Toaster } from "react-hot-toast";
-import { getQuantityOfAProduct } from "@/services/productService";
 
 interface Product {
   id: number;
@@ -42,13 +43,32 @@ interface ProductPageProps {
   addToCart: (product: Product) => void;
 }
 
-const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
+const ProductPage: React.FC<ProductPageProps> = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getProducts = async () => {
+      try {
+        const data = await getAllProducts();
+        console.log(data);
+        setProducts(data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getProducts();
+  }, []);
+
 
   // Extract unique categories and brands
   const categories = Array.from(new Set(products.map((p) => p.category)));
@@ -77,14 +97,14 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
       }
       setQuantities(quantitiesMap);
       console.log(quantitiesMap);
+
     };
 
     fetchQuantities();
-  }, []);
+  }, [products]);
 
   return (
     <main>
-      {/* Header */}
       <div className="flex items-center justify-between p-2 bg-white">
         <Toaster position="top-right" />
         <h1 className="text-xl font-bold">Our Products</h1>
@@ -125,7 +145,6 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
       </div>
       <header className="flex items-center justify-between p-4 border-b bg-white"></header>
 
-      {/* Filters Sidebar for Mobile */}
       {isFilterOpen && (
         <FiltersSidebar
           categories={categories}
