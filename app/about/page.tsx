@@ -1,8 +1,9 @@
 "use client";
 
-import SiteFooter from "@/components/site-footer";
-import Header from "@/components/site-header";
 import React, { useState } from "react";
+
+import Header from "@/components/site-header";
+import SiteFooter from "@/components/site-footer";
 
 function AboutSection() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,13 +13,6 @@ function AboutSection() {
 
   return (
     <>
-      <Header
-        setCurrentPage={setCurrentPage}
-        cart={cart}
-        setCart={setCart}
-        isCartOpen={isCartOpen}
-        setIsCartOpen={setIsCartOpen}
-      />
       <section className="w-full py-12 md:py-24 lg:py-32 bg-muted">
         <div className="container px-4 md:px-6">
           <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-8">

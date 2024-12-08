@@ -1,8 +1,8 @@
-import React from "react";
-import CategoryFilter from "./catogaryFilter";
 import BrandFilter from "./brandFilter";
-import PriceRangeFilter from "./priceRangerFilter";
 import { Button } from "@/components/ui/button";
+import CategoryFilter from "./catogaryFilter";
+import PriceRangeFilter from "./priceRangerFilter";
+import React from "react";
 
 interface FiltersSidebarProps {
   categories: string[];

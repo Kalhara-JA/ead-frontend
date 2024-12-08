@@ -1,35 +1,15 @@
 "use client";
 
 import { ArrowRight, ShoppingBag } from "lucide-react";
-import {
-  MenuIcon,
-  MinusIcon,
-  PlusIcon,
-  ShoppingCartIcon,
-  TrashIcon,
-  XIcon,
-} from "lucide-react";
-import { payOrder, placeOrder } from "@/services/orderService";
-import toast, { Toaster } from "react-hot-toast";
-import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import CTASignUpSection from "@/components/cta-section";
 import CategorySection from "@/components/category-section";
 import CompanyLogoSection from "@/components/company-logo";
-import DealsSection from "@/components/deals-section";
 import FeaturesSection from "@/components/features-section";
-import Header from "@/components/site-header";
-import PayModal from "@/components/orders/payModal";
-import { PlaceOrderResponse } from "@/types/orderTypes";
-import ProductPage from "@/components/product-section";
 import SiteFooter from "@/components/site-footer";
 import TestimonialSection from "@/components/testimonial-section";
-import axios from "axios";
-import { checkInventory } from "@/services/inventoryServices";
-import { getAllProducts } from "@/services/productService";
-import { postOrders } from "@/services/orderServices";
-import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const categories = [
   { name: "Marketing Tools", icon: "📈" },
@@ -40,79 +20,13 @@ const categories = [
   { name: "Analytics Platforms", icon: "📊" },
 ];
 
-const deals = [
-  {
-    id: 7,
-    name: "iPHONE",
-    skuCode: "iphone_15",
-    price: 79.99,
-    originalPrice: 129.99,
-    image: "https://via.placeholder.com/1000",
-    tag: "New Product",
-  },
-  {
-    id: 8,
-    skuCode: "pixel_8",
-    name: "Cloud Sync Ultimate",
-    price: 49.99,
-    originalPrice: 89.99,
-    image: "https://via.placeholder.com/1000",
-    tag: "Deal of the Day",
-  },
-  {
-    
-    id: 9,
-    skuCode: "galaxy_24",
-    name: "Marketing Automation Suite",
-    price: 159.99,
-    originalPrice: 249.99,
-    image: "https://via.placeholder.com/1000",
-    tag: "Monthly Special",
-  },
-  {
-    id: 10,
-    name: "lol Platform",
-    price: 29.99,
-    originalPrice: 59.99,
-    image: "https://via.placeholder.com/1000",
-    tag: "New Deal",
-  },
-];
-
-type CartItem = {
-  id: number;
-  skuCode: string;
-  name: string;
-  price: number;
-  image: string;
-  quantity: number;
-};
-
 export default function ECommerceApp() {
-  const [currentPage, setCurrentPage] = useState("landing");
-  const [isCartOpen, setIsCartOpen] = useState(false);
-
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const getProducts = async () => {
-      try {
-        const data = await getAllProducts();
-        console.log(data);
-        setProducts(data);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getProducts();
-  }, []);
+  const router = useRouter();
+  const handleNavigation = (page: string) => {
+    router.push(page);
+  };
 
   const renderLandingPage = () => (
-    // Landing Page  Section
     <main className="flex-1">
       <section className="w-full py-12 md:py-24 lg:py-28 xl:py-28 bg-white dark:bg-black overflow-hidden">
         <div className="container px-4 md:px-6 mx-auto">
@@ -128,7 +42,7 @@ export default function ECommerceApp() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Button
                   className="inline-flex items-center justify-center rounded-md bg-black text-white dark:bg-white dark:text-black shadow transition-colors hover:bg-gray-800 dark:hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400"
-                  onClick={() => setCurrentPage("products")}
+                  onClick={() => handleNavigation("/products")}
                 >
                   Shop Now
                   <ShoppingBag className="ml-2 h-4 w-4" />
@@ -166,7 +80,6 @@ export default function ECommerceApp() {
         </div>
       </section>
       <CompanyLogoSection />
-      <DealsSection deals={deals} addToCart={addToCart} />
 
       <CategorySection categories={categories} />
 
@@ -177,406 +90,10 @@ export default function ECommerceApp() {
       <CTASignUpSection />
     </main>
   );
-  const { data: session } = useSession();
-
-//Staring cart section
-const [cart, setCart] = useState<CartItem[]>(() => {
-  const savedCart = localStorage.getItem("cart");
-  return savedCart ? JSON.parse(savedCart) : [];
-});
-useEffect(() => {
-  localStorage.setItem("cart", JSON.stringify(cart));
-}, [cart]);
-  // @ts-ignore
-  const addToCart = (product) => {
-    // @ts-ignore
-    const existingItem = cart.find((item) => item.id === product.id);
-    if (existingItem) {
-      // @ts-ignore
-      setCart(
-        // @ts-ignore
-        cart.map((item) =>
-          // @ts-ignore
-          item.id === product.id
-            ? // @ts-ignore
-              { ...item, quantity: item.quantity + 1 }
-            : item
-        )
-      );
-    } else {
-      // @ts-ignore
-      setCart([...cart, { ...product, quantity: 1 }]);
-    }
-  };
-
-  // @ts-ignore
-  const removeFromCart = (productId) => {
-    // @ts-ignore
-    setCart(cart.filter((item) => item.id !== productId));
-  };
-
-  // @ts-ignore
-  const updateQuantity = (productId, newQuantity) => {
-    if (newQuantity === 0) {
-      // @ts-ignore
-      removeFromCart(productId);
-    } else {
-      // @ts-ignore
-      setCart(
-        // @ts-ignore
-        cart.map((item) =>
-          // @ts-ignore
-          item.id === productId ? { ...item, quantity: newQuantity } : item
-        )
-      );
-    }
-  };
-
-  // @ts-ignore
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  // @ts-ignore
-  const totalPrice = cart.reduce(
-    // @ts-ignore
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-
-
-  const renderCart = () => {
-    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-    const [isPayModalOpen, setIsPayModalOpen] = useState(false); // New state for Pay modal
-    const [address, setAddress] = useState("");
-    const [placedOrder, setPlacedOrder] = useState<PlaceOrderResponse | null>(
-      null
-    );
-
-    const [useDefaultAddress, setUseDefaultAddress] = useState(true); // State to switch between default and new address
-    const [unavailableItems, setUnavailableItems] = useState<
-      {
-        skuCode: string;
-        requestedQuantity: number;
-        availableQuantity: number;
-      }[]
-    >([]);
-
-    const handleProceedToCheckout = async () => {
-      setLoading(true);
-      const outOfStockItems = [];
-      try {
-        // Loop through cart items one by one and check availability
-        console.log(cart);
-        for (const item of cart) {
-          const response = await checkInventory(item.skuCode, item.quantity);
-          console.log(response.availableQuantity);
-
-          // Check the response for availability
-          if (response.isInStock == false) {
-            outOfStockItems.push({
-              skuCode: item.name,
-              requestedQuantity: item.quantity,
-              availableQuantity: response.availableQuantity || 0,
-            });
-          }
-        }
-        console.log(outOfStockItems);
-        if (outOfStockItems.length > 0) {
-          setUnavailableItems(outOfStockItems);
-          alert(
-            `The following items are out of stock:\n${outOfStockItems
-              .map(
-                (item) =>
-                  `${item.skuCode} (Requested: ${item.requestedQuantity}, Available: ${item.availableQuantity})`
-              )
-              .join("\n")}`
-          );
-        } else {
-          toast.success("All items are in stock. Proceeding to checkout...");
-          setIsPaymentModalOpen(true);
-        }
-      } catch (error) {
-        console.error("Error checking stock availability:", error);
-        toast.error("An error occurred while checking stock availability.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    console.log(cart);
-
-    const defaultAddress = `${session?.user?.address?.street_address}, ${session?.user?.address?.locality}, ${session?.user?.address?.region}, ${session?.user?.address?.postal_code}, ${session?.user?.address?.country}`;
-   
-    const handleMakePayment = async () => {
-      const fullName = session?.user?.name || "";
-      const [firstName, lastName] = fullName.split(" ");
-      const email = session?.user?.email || "";
-
-      if(!useDefaultAddress){
-        if (!address) {
-          return toast.error("Please enter your address.");
-      }}
-
-      console.log("cart", cart);
-
-      try {
-        const items = cart.map((item) => ({
-          skuCode: item.skuCode,
-          quantity: item.quantity,
-        }));
-        const order = {
-          items: items,
-          total: totalPrice,
-          shippingAddress: useDefaultAddress ? defaultAddress : address,
-          date: new Date().toISOString(),
-          userDetails: {
-            email: email,
-            firstName: firstName,
-            lastName: lastName,
-          },
-        };
-
-        const data = await placeOrder(order);
-        setPlacedOrder(data);
-        toast.success("Order placed successfully!");
-        setCart([]);
-        setUseDefaultAddress(true);
-        setIsPayModalOpen(true);
-        setIsPaymentModalOpen(false);
-      } catch (error: any) {
-        toast.error(error);
-      }
-    };
-
-    const pay = async (orderId?: number) => {
-      try {
-        if (!orderId) {
-          throw new Error("Invalid order ID");
-        }
-        const data = await payOrder(orderId);
-        toast.success("Payment processed successfully!");
-        setIsPayModalOpen(false);
-      } catch (error: any) {
-        toast.error(error);
-      }
-    };
-
-    return (
-      <>
-        {/* Cart Section */}
-        {isCartOpen && (
-          <>
-            <div
-              className="fixed inset-0 bg-black bg-opacity-50 z-40"
-              onClick={() => {
-                setIsCartOpen(false);
-                setUnavailableItems([]);
-              }}
-            />
-            <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-background shadow-lg p-6 overflow-y-auto z-50">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Your Cart</h2>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    setIsCartOpen(false);
-                    setUnavailableItems([]);
-                  }}
-                >
-                  <XIcon className="h-6 w-6" />
-                </Button>
-              </div>
-              {cart.length === 0 ? (
-                <p className="text-muted-foreground">Your cart is empty.</p>
-              ) : (
-                <>
-                  {cart.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between mb-4"
-                    >
-                      <div className="flex items-center">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-16 h-16 object-cover rounded-md mr-4"
-                        />
-                        <div>
-                          <h3 className="font-semibold">{item.name}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            ${item.price.toFixed(2)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity - 1)
-                          }
-                        >
-                          <MinusIcon className="h-4 w-4" />
-                        </Button>
-                        <span className="mx-2">{item.quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity + 1)
-                          }
-                        >
-                          <PlusIcon className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="ml-2"
-                          onClick={() => removeFromCart(item.id)}
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  <div className="mt-6 border-t pt-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="font-semibold">Total:</span>
-                      <span className="font-bold">
-                        ${totalPrice.toFixed(2)}
-                      </span>
-                    </div>
-                    {unavailableItems.length > 0 && (
-                      <div className="mb-4">
-                        <h3 className="text-red-500 font-semibold mb-2">
-                          Out of Stock Items
-                        </h3>
-                        <ul>
-                          {unavailableItems.map((item) => (
-                            <li key={item.skuCode}>
-                              {item.skuCode} - (Requested:{" "}
-                              {item.requestedQuantity}, Available:{" "}
-                              {item.availableQuantity})
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    <Button
-                      className="w-full"
-                      onClick={handleProceedToCheckout}
-                    >
-                      Proceed to Checkout
-                    </Button>
-                  </div>
-                </>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* Payment Modal */}
-        {isPaymentModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-              <h2 className="text-2xl font-bold mb-4">Wish Order Details</h2>
-              <p>
-                {cart.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between mb-4"
-                  >
-                    <div className="flex items-center">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-16 h-16 object-cover rounded-md mr-4"
-                      />
-                      <div>
-                        <h3 className="font-semibold">{item.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          ${item.price.toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="mx-5">{item.quantity}</span>
-                    </div>
-                  </div>
-                ))}
-              </p>
-              <p className="mb-4 font-semibold">
-                Total Amount: ${totalPrice.toFixed(2)}
-              </p>
-
-              <div className="flex items-center mb-4">
-                <input
-                  type="checkbox"
-                  checked={useDefaultAddress}
-                  onChange={() => setUseDefaultAddress(!useDefaultAddress)}
-                  className="mr-2"
-                />
-                <label className="font-medium">Use default address</label>
-              </div>
-
-              {useDefaultAddress ? (
-                <div className="p-4 border rounded-lg mb-4">
-                  <h3 className="font-semibold">Default Address</h3>
-                  <p>{`${session?.user?.address?.street_address}, ${session?.user?.address?.locality}, ${session?.user?.address?.region}, ${session?.user?.address?.postal_code}, ${session?.user?.address?.country}`}</p>
-                </div>
-              ) : (
-                <>
-                  <label className="block mb-2 font-medium">New Address</label>
-                  <input
-                    type="text"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Enter your address"
-                    className="w-full p-2 border rounded-md mb-4"
-                  />
-                </>
-              )}
-              <div className="flex justify-end">
-                <Button
-                  variant="ghost"
-                  className="mr-2"
-                  onClick={() => setIsPaymentModalOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button onClick={handleMakePayment}>Add to Wish List</Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Pay Modal */}
-        {isPayModalOpen && (
-          <PayModal
-            orderId={placedOrder?.orderId}
-            total={placedOrder?.total}
-            pay={pay}
-            setIsPayModalOpen={setIsPayModalOpen}
-          />
-        )}
-      </>
-    );
-  };
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header
-        setCurrentPage={setCurrentPage}
-        cart={cart}
-        setCart={setCart}
-        isCartOpen={isCartOpen}
-        setIsCartOpen={setIsCartOpen}
-      />
-      {currentPage === "landing" ? (
-        renderLandingPage()
-      ) : (
-        <ProductPage products={products} addToCart={addToCart} />
-      )}
-      {renderCart()}
+      {renderLandingPage()}
       <SiteFooter />
     </div>
   );
