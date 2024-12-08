@@ -23,18 +23,19 @@ interface Product {
   category: string;
   brand: string;
   description: string;
+  quantity: number;
 }
 
 interface ProductDialogProps {
   product: Product;
-  quantity: number;
+  // quantity: number;
 }
 
-const ProductDialog: React.FC<ProductDialogProps> = ({ product, quantity }) => {
+const ProductDialog: React.FC<ProductDialogProps> = ({ product }) => {
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {
-    if (quantity > 0) {
+    if (product.quantity > 0) {
       const cartItem = {
         ...product,
         quantity: 1, // Default quantity to 1 for new items
@@ -64,9 +65,9 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ product, quantity }) => {
           </DialogTrigger>
           <div className="grid grid-cols-2 items-center">
             <h2 className="text-xl font-semibold mb-2">{product.name}</h2>
-            {quantity > 0 && (
+            {product.quantity > 0 && (
               <h4 className="text-muted-foreground mb-4 justify-end flex">
-                Available quantity: {quantity}
+                Available quantity: {product.quantity}
               </h4>
             )}
           </div>
@@ -82,9 +83,9 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ product, quantity }) => {
               handleAddToCart(); // Call add-to-cart logic
             }}
             className="w-full"
-            disabled={quantity <= 0}
+            disabled={product.quantity <= 0}
           >
-            {quantity <= 0 ? "Out of Stock" : "Add to Cart"}
+            {product.quantity <= 0 ? "Out of Stock" : "Add to Cart"}
           </Button>
         </CardContent>
       </Card>
@@ -112,9 +113,9 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ product, quantity }) => {
           <Button
             onClick={handleAddToCart}
             className="w-full"
-            disabled={quantity <= 0}
+            disabled={product.quantity <= 0}
           >
-            {quantity <= 0 ? "Out of Stock" : "Add to Cart"}
+            {product.quantity <= 0 ? "Out of Stock" : "Add to Cart"}
           </Button>
         </DialogFooter>
       </DialogContent>
