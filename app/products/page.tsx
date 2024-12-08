@@ -38,12 +38,8 @@ interface Product {
   description: string;
 }
 
-interface ProductPageProps {
-  products: Product[];
-  addToCart: (product: Product) => void;
-}
 
-const ProductPage: React.FC<ProductPageProps> = () => {
+const ProductPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
