@@ -64,7 +64,7 @@ function OrderDetailsPage({ params }: { params: { orderNumber: string } }) {
         throw new Error("Invalid order ID");
       }
      const data= await cancelOrder(order?.id);
-      toast.success("Payment processed successfully!");
+      toast.success("Payment canceled successfully!");
       loadOrderData();
       setCancelModelOpen(false);
 
@@ -73,29 +73,6 @@ function OrderDetailsPage({ params }: { params: { orderNumber: string } }) {
     }
   }
 
-  // const deliverOrder = async (id?: number) => {
-  //   try {
-  //     if(id==undefined) return;
-  //     const data = await deliverOrderById(id);
-  //     toast.success(data);
-  //     loadOrderData();
-  //   } catch (err:any) {
-  //     if(err.response)
-  //     toast.error(` ${err.response.data}`);
-  //   }
-  // }
-
-  // const shipOrder = async (id?: number) => {
-  //   try {
-  //     if(id==undefined) return;
-  //     const data = await shipOrderById(id);
-  //     toast.success(data);
-  //     loadOrderData();
-  //   } catch (err:any) {
-  //     if(err.response)
-  //     toast.error(` ${err.response.data}`);
-  //   }
-  // }
 
   useEffect(() => {
     loadOrderData();

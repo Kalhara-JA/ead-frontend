@@ -1,22 +1,31 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import axiosInstance from "@/lib/axiosInstance";
-import Header from "@/components/site-header";
-import SiteFooter from "@/components/site-footer";
-import OrderTable from "@/components/orders/orderTable";
-import OrderFilter from "@/components/orders/orderFilter";
-import DetailsModal from "@/components/orders/detailsmodal";
-import StatusModal from "@/components/orders/statusModal";
-import PaymentModal from "@/components/orders/paymentModal";
-import { Order } from "@/types/orderTypes";
-//import { toast } from "react-toastify";
-//import "react-toastify/dist/ReactToastify.css";
-import { getAllOrders } from "@/services/orderServices";
-import PayModal from "@/components/orders/payModal";
+
+import React, { useEffect, useState } from "react";
 import { getMyOrders, payOrder } from "@/services/orderService";
 import toast, { Toaster } from "react-hot-toast";
+
+import DetailsModal from "@/components/orders/detailsmodal";
+import Header from "@/components/site-header";
+import { Order } from "@/types/orderTypes";
+import OrderFilter from "@/components/orders/orderFilter";
+import OrderTable from "@/components/orders/orderTable";
+import PayModal from "@/components/orders/payModal";
+import PaymentModal from "@/components/orders/paymentModal";
+import SiteFooter from "@/components/site-footer";
+import StatusModal from "@/components/orders/statusModal";
+import axiosInstance from "@/lib/axiosInstance";
+import { getAllOrders } from "@/services/orderServices";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+
+//import { toast } from "react-toastify";
+//import "react-toastify/dist/ReactToastify.css";
+
+
+
+
+
+
 
 
 function OrderPage() {
@@ -88,15 +97,14 @@ function OrderPage() {
   return (
     <>
     <Toaster/>
-      <Header
-        setCurrentPage={() => {}}
-        cart={[]}
-        setCart={() => {}}
-        isCartOpen={false}
-        setIsCartOpen={() => {}}
-      />
+      
       <section className="w-full py-1 md:py-2 lg:py-3 bg-muted">
+      
+
+
         <div className="p-6">
+        <span className="font-bold  text-lg text-gray-500 ">My Orders</span>
+        <br></br><br></br>
           <OrderFilter filters={filters} setFilters={setFilters} />
           <OrderTable
             orders={filteredOrders}

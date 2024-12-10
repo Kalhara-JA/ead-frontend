@@ -18,7 +18,7 @@ export const getAllOrder = async () => {
           const response = await axiosInstance.post(
             `/v1/orders`,
             orderDetails,
-          {timeout: 100000}
+          {timeout: 5000}
           );
           console.log(response.data);
           return response.data; // Axios stores the response data in `data`
@@ -31,7 +31,7 @@ export const getAllOrder = async () => {
 
       export const payOrder = async (orderid:number) => {
         try {
-          const response = await axiosInstance.put(`/v1/orders/${orderid}/payment`);
+          const response = await axiosInstance.put(`${process.env.NEXT_PUBLIC_API_URL}/v1/orders/${orderid}/payment`);
           console.log(response.data);
           return response.data; // Axios stores the response data in `data`
         } catch (error:any) {
@@ -43,7 +43,7 @@ export const getAllOrder = async () => {
 
       export const cancelOrder = async (orderid:number) => {
         try {
-          const response = await axiosInstance.put(`/v1/orders/${orderid}/cancel`);
+          const response = await axiosInstance.put(`${process.env.NEXT_PUBLIC_API_URL}/v1/orders/${orderid}/cancel`);
           console.log(response.data);
           return response.data; // Axios stores the response data in `data`
         } catch (error:any) {
@@ -55,7 +55,7 @@ export const getAllOrder = async () => {
 
       export const fetchOrderByOrderNumber = async (orderNumber:string) => {
         try {
-          const response = await axiosInstance.get(`/v1/orders/${orderNumber}`
+          const response = await axiosInstance.get(`${process.env.NEXT_PUBLIC_API_URL}/v1/orders/${orderNumber}`
           );
           return response.data;
         } catch (error) {
@@ -66,7 +66,7 @@ export const getAllOrder = async () => {
 
       export const getMyOrders = async (email?:string) => {
         try {
-            const response = await axiosInstance.get(`/v1/orders/user/${email}/orders`);
+            const response = await axiosInstance.get(`${process.env.NEXT_PUBLIC_API_URL}/v1/orders/user/${email}/orders`);
             return response.data;
         } catch (error) {
             console.error("Error fetching orders:", error);

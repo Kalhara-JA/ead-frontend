@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Dialog,
   DialogContent,
@@ -5,7 +7,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import React, { useEffect, useState } from "react";
 import {
@@ -14,7 +15,11 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
+} from "@/components/ui/select";
+import {
+  getAllProducts,
+  // getQuantityOfAProduct,
+} from "@/services/productService";
 
 import { Button } from "@/components/ui/button";
 import FiltersSidebar from "@/components/products/filterSlideBar";
@@ -22,9 +27,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MenuIcon } from "lucide-react";
 import ProductDialog from "@/components/products/ProductDialog";
-import { Slider } from "./ui/slider";
+import { Slider } from "@/components/ui/slider";
 import { Toaster } from "react-hot-toast";
-import { getQuantityOfAProduct } from "@/services/productService";
 
 interface Product {
   id: number;
@@ -35,20 +39,34 @@ interface Product {
   category: string;
   brand: string;
   description: string;
+  quantity: number;
 }
 
-interface ProductPageProps {
-  products: Product[];
-  addToCart: (product: Product) => void;
-}
-
-const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
+const ProductPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000000]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getProducts = async () => {
+      try {
+        const data = await getAllProducts();
+        console.log(data);
+        setProducts(data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getProducts();
+  }, []);
 
   // Extract unique categories and brands
   const categories = Array.from(new Set(products.map((p) => p.category)));
@@ -68,64 +86,34 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
   const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
 
   // Fetch quantities for each product
-  useEffect(() => {
-    const fetchQuantities = async () => {
-      const quantitiesMap: { [key: number]: number } = {};
-      for (const product of filteredProducts) {
-        const quantity = await getQuantityOfAProduct(product.skuCode);
-        quantitiesMap[product.id] = quantity;
-      }
-      setQuantities(quantitiesMap);
-      console.log(quantitiesMap);
-    };
+  // useEffect(() => {
+  //   const fetchQuantities = async () => {
+  //     const quantitiesMap: { [key: number]: number } = {};
+  //     for (const product of filteredProducts) {
+  //       const quantity = await getQuantityOfAProduct(product.skuCode);
+  //       quantitiesMap[product.id] = quantity;
+  //     }
+  //     setQuantities(quantitiesMap);
+  //     console.log(quantitiesMap);
+  //   };
 
-    fetchQuantities();
-  }, []);
+  //   fetchQuantities();
+  // }, [products]);
 
   return (
     <main>
-      {/* Header */}
       <div className="flex items-center justify-between p-2 bg-white">
         <Toaster position="top-right" />
         <h1 className="text-xl font-bold">Our Products</h1>
-        <Dialog>
-          <Input
-            placeholder="Search Products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm bg-transparent border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-blue-300"
-          />
-
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Edit profile</DialogTitle>
-              <DialogDescription>
-                Make changes to your profile here. Click save when you're done.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input id="name" value="Pedro Duarte" className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="username" className="text-right">
-                  Username
-                </Label>
-                <Input id="username" value="@peduarte" className="col-span-3" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit">Save changes</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <Input
+          placeholder="Search Products..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-sm bg-transparent border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-blue-300"
+        />
       </div>
       <header className="flex items-center justify-between p-4 border-b bg-white"></header>
 
-      {/* Filters Sidebar for Mobile */}
       {isFilterOpen && (
         <FiltersSidebar
           categories={categories}
@@ -142,7 +130,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
       {/* Main Content */}
       <div className="flex h-screen">
         {/* Toggle Button for Mobile/Tablet */}
-      
+
         <button
           className="md:hidden p-2 fixed top-6 left-2 z-20 bg-gray-200 mt-24 rounded-md shadow-lg"
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -155,7 +143,6 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} 
         md:sticky md:translate-x-0 md:w-1/4`}
         >
-          
           <h2 className="text-lg font-semibold mb-4">Filters</h2>
           {/* Category */}
           <div className="mb-6">
@@ -204,21 +191,56 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
           {/* Price Range */}
           <div className="mb-6">
             <h3 className="text-sm font-semibold mb-2">Price Range</h3>
-            <Slider
-              value={priceRange}
-              onValueChange={(value) =>
-                setPriceRange(value as [number, number])
-              }
-              min={0}
-              max={1000000}
-              step={10}
-              className="w-full"
-            />
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <label htmlFor="minPrice" className="text-sm">
+                  Min:
+                </label>
+                <input
+                  type="number"
+                  id="minPrice"
+                  value={priceRange[0]}
+                  min={0}
+                  max={priceRange[1] - 1}
+                  step={10}
+                  onChange={(e) => {
+                    const newMin = Math.min(
+                      Number(e.target.value),
+                      priceRange[1] - 1
+                    );
+                    setPriceRange([newMin, priceRange[1]]);
+                  }}
+                  className="w-20 border border-gray-300 rounded px-2 py-1 text-sm"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <label htmlFor="maxPrice" className="text-sm">
+                  Max:
+                </label>
+                <input
+                  type="number"
+                  id="maxPrice"
+                  value={priceRange[1]}
+                  min={priceRange[0] + 1}
+                  max={10000000000}
+                  step={10}
+                  onChange={(e) => {
+                    const newMax = Math.max(
+                      Number(e.target.value),
+                      priceRange[0] + 1
+                    );
+                    setPriceRange([priceRange[0], newMax]);
+                  }}
+                  className="w-20 border border-gray-300 rounded px-2 py-1 text-sm"
+                />
+              </div>
+            </div>
             <div className="flex justify-between text-sm mt-2">
               <span>${priceRange[0]}</span>
               <span>${priceRange[1]}</span>
             </div>
           </div>
+
           <Button
             variant="outline"
             onClick={() => {
@@ -250,7 +272,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ products, addToCart }) => {
                 <ProductDialog
                   key={product.id}
                   product={product}
-                  quantity={quantities[product.id] || 0}
+                  // quantity={quantities[product.id] || 0}
                 />
               ))}
             </div>

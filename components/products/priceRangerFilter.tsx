@@ -11,7 +11,7 @@ const PriceRangeFilter: React.FC<PriceRangeFilterProps> = ({
 }) => {
   return (
     <div className="mb-6">
-      <h3 className="text-sm font-semibold mb-2">Price Range</h3>
+      <h3 className="text-sm font-semibold mb-2">Price Rangfgyhgryge</h3>
       <Slider
         value={priceRange}
         onValueChange={(value) => setPriceRange(value as [number, number])}
