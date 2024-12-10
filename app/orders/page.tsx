@@ -96,12 +96,9 @@ function OrderPage() {
   console.log("orders", filteredOrders);
   return (
     <>
-    <Toaster/>
       
       <section className="w-full py-1 md:py-2 lg:py-3 bg-muted">
       
-
-
         <div className="p-6">
         <span className="font-bold  text-lg text-gray-500 ">My Orders</span>
         <br></br><br></br>

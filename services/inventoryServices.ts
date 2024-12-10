@@ -12,7 +12,7 @@ export const getAllInventory = async () => {
 
 export const checkInventory = async (skuCode: string, quantity: number) => {
     try {
-        const response = await axiosInstance.get(`${process.env.NEXT_PUBLIC_API_URL}/v1/inventory/checkStock?skuCode=${skuCode}&quantity=${quantity}`);
+        const response = await axiosInstance.get(`${process.env.NEXT_PUBLIC_API_URL}/v1/inventory/stocks?skuCode=${skuCode}&quantity=${quantity}`);
         return response.data;
     } catch (error) {
         console.error("Error checking inventory:", error);
