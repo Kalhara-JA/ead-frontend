@@ -47,14 +47,6 @@ export default function ECommerceApp() {
                   Shop Now
                   <ShoppingBag className="ml-2 h-4 w-4" />
                 </Button>
-                <Button
-                  variant="outline"
-                  className="inline-flex items-center justify-center border-black text-black dark:border-white dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900"
-                  onClick={() => window.open("https://easyui.pro", "_blank")}
-                >
-                  Learn More
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
               </div>
             </div>
             <div className="relative mx-auto lg:order-last">
@@ -79,15 +71,6 @@ export default function ECommerceApp() {
           </div>
         </div>
       </section>
-      <CompanyLogoSection />
-
-      <CategorySection categories={categories} />
-
-      <TestimonialSection />
-
-      <FeaturesSection />
-
-      <CTASignUpSection />
     </main>
   );
 
