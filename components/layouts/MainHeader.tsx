@@ -28,8 +28,6 @@ const MainHeader = () => {
             </a>
             <nav className="flex items-center space-x-6 text-sm font-medium">
               <a href="/products">Products</a>
-              <a href="/#categories-section">Categories</a>
-              <a href="/#deals">Deals</a>
               <a href="/about">About</a>
             </nav>
           </div>

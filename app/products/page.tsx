@@ -16,10 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  getAllProducts,
-  // getQuantityOfAProduct,
-} from "@/services/productService";
 
 import { Button } from "@/components/ui/button";
 import FiltersSidebar from "@/components/products/filterSlideBar";
@@ -29,6 +25,9 @@ import { MenuIcon } from "lucide-react";
 import ProductDialog from "@/components/products/ProductDialog";
 import { Slider } from "@/components/ui/slider";
 import { Toaster } from "react-hot-toast";
+import {
+  getAllProducts,
+} from "@/services/productService";
 
 interface Product {
   id: number;
@@ -83,27 +82,9 @@ const ProductPage = () => {
   );
   console.log(filteredProducts);
 
-  const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
-
-  // Fetch quantities for each product
-  // useEffect(() => {
-  //   const fetchQuantities = async () => {
-  //     const quantitiesMap: { [key: number]: number } = {};
-  //     for (const product of filteredProducts) {
-  //       const quantity = await getQuantityOfAProduct(product.skuCode);
-  //       quantitiesMap[product.id] = quantity;
-  //     }
-  //     setQuantities(quantitiesMap);
-  //     console.log(quantitiesMap);
-  //   };
-
-  //   fetchQuantities();
-  // }, [products]);
-
   return (
     <main>
       <div className="flex items-center justify-between p-2 bg-white">
-        <Toaster position="top-right" />
         <h1 className="text-xl font-bold">Our Products</h1>
         <Input
           placeholder="Search Products..."
