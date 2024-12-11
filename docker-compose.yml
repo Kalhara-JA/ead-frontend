@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile-ead-frontend
+    container_name: ead-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: "http://api-gateway:9000/api"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+      NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: "storeclient"
+      NEXT_PUBLIC_KEYCLOAK_CLIENT_SECRET: "5Fztw9WrileMbzsgBHuq7byz18HQJN6L"
+      NEXT_PUBLIC_KEYCLOAK_ISSUER: "http://localhost:8181/realms/store"
+      NEXT_PUBLIC_KEYCLOAK_ADMIN_USERNAME: "admin@gmail.com"
+      NEXT_PUBLIC_KEYCLOAK_ADMIN_PASSWORD: "admin"
+      NEXT_PUBLIC_KEYCLOAK_URL: "http://localhost:8181/realms/store"
+      NEXT_PUBLIC_KEYCLOAK_HOST_URL: "http://localhost:8181"
+      NEXT_PUBLIC_KEYCLOAK_REALM: "store"
+      NEXTAUTH_URL: "http://localhost:3000"
+      NEXTAUTH_SECRET: "6nJoEdU+Er9O73UnXTjIzYt5XsHx6cmtrMqDBuZrEbc="
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
